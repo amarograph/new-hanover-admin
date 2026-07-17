@@ -240,10 +240,70 @@ async function handleEmployes(req, res, user, slug) {
   return sendError(res, 'Méthode non autorisée', 405);
 }
 
+// ---------------------------------------------------------------------------
+// Tâches : simple to-do list partagée, même principe que ci-dessus
+// (?resource=taches) pour ne pas dépasser la limite de fonctions Hobby.
+// ---------------------------------------------------------------------------
+
+async function listTaches(req, res, user) {
+  if (!hasPermission(user, 'taches', 'view')) return sendError(res, 'Accès refusé', 403);
+  const { results } = await db.prepare(
+    `SELECT t.*, au.discord_username as author_name FROM taches t
+     LEFT JOIN users au ON au.id = t.author_id
+     ORDER BY t.done ASC, t.created_at ASC`
+  ).all();
+  return sendJson(res, { taches: results });
+}
+
+async function createTache(req, res, user) {
+  if (!hasPermission(user, 'taches', 'add')) return sendError(res, 'Accès refusé', 403);
+  const body = req.body || {};
+  if (!body.text || !body.text.trim()) return sendError(res, 'Le texte de la tâche est requis', 422);
+
+  const result = await db.prepare(
+    'INSERT INTO taches (text, author_id) VALUES (?, ?) RETURNING id'
+  ).bind(body.text.trim(), user.id).run();
+  return sendJson(res, { id: result.meta.last_row_id }, 201);
+}
+
+async function handleTaches(req, res, user, slug) {
+  if (slug.length === 0) {
+    if (req.method === 'GET') return listTaches(req, res, user);
+    if (req.method === 'POST') return createTache(req, res, user);
+    res.setHeader('Allow', 'GET, POST');
+    return sendError(res, 'Méthode non autorisée', 405);
+  }
+
+  const id = slug[0];
+
+  if (req.method === 'PATCH') {
+    if (!hasPermission(user, 'taches', 'edit')) return sendError(res, 'Accès refusé', 403);
+    const before = await db.prepare('SELECT * FROM taches WHERE id=?').bind(id).first();
+    if (!before) return sendError(res, 'Tâche introuvable', 404);
+
+    const body = req.body || {};
+    await db.prepare(`UPDATE taches SET done=?, updated_at=${NOW_EXPR} WHERE id=?`).bind(body.done ? 1 : 0, id).run();
+    return sendJson(res, { ok: true });
+  }
+
+  if (req.method === 'DELETE') {
+    if (!hasPermission(user, 'taches', 'delete')) return sendError(res, 'Accès refusé', 403);
+    const before = await db.prepare('SELECT * FROM taches WHERE id=?').bind(id).first();
+    if (!before) return sendError(res, 'Tâche introuvable', 404);
+
+    await db.prepare('DELETE FROM taches WHERE id=?').bind(id).run();
+    return sendJson(res, { ok: true });
+  }
+
+  res.setHeader('Allow', 'PATCH, DELETE');
+  return sendError(res, 'Méthode non autorisée', 405);
+}
+
 export default async function handler(req, res) {
   const user = await getSessionUser(req);
   const slug = Array.isArray(req.query.slug) ? req.query.slug : (req.query.slug ? [req.query.slug] : []);
 
   if (req.query.resource === 'employes') return handleEmployes(req, res, user, slug);
+  if (req.query.resource === 'taches') return handleTaches(req, res, user, slug);
   return handleEntreprises(req, res, user, slug);
 }

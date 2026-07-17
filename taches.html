@@ -6,22 +6,37 @@
 <title>Tâches — Administration de New Hanover</title>
 <link rel="icon" type="image/png" href="/css/img/favicon.png">
 <link rel="stylesheet" href="/css/theme.css">
+<style>
+  .tache-list { list-style: none; margin: 0; padding: 0; }
+  .tache-item {
+    display: flex; align-items: center; gap: 0.7rem;
+    padding: 0.6rem 0.2rem; border-bottom: 1px solid var(--paper-line);
+  }
+  .tache-item:last-child { border-bottom: none; }
+  .tache-item input[type="checkbox"] { width: 1.1rem; height: 1.1rem; flex-shrink: 0; }
+  .tache-text { flex: 1; word-break: break-word; }
+  .tache-item.done .tache-text { text-decoration: line-through; color: var(--ink-soft); }
+  .tache-remove {
+    background: none; border: none; color: var(--bordeaux); cursor: pointer;
+    font-size: 1.1rem; line-height: 1; padding: 0.2rem 0.4rem;
+  }
+</style>
 </head>
-<body data-page="taches">
+<body data-page="taches" data-require-permission="taches:view">
 <div class="app-shell">
   <aside class="sidebar" id="sidebar"></aside>
   <div class="main">
     <header class="topbar" id="topbar"></header>
     <div class="content" id="content">
       <h1>Liste des tâches</h1>
+
       <div class="sheet">
-        <span class="stamp stamp-gold" style="margin-bottom:0.8rem;">Module à venir</span>
-        <p>Suivi des tâches de l'administration, assignables à un ou plusieurs employés.</p>
-        
-        <h3>Prévu pour ce module</h3>
-        <ul class="muted" style="line-height:1.9;">
-          <li>Catégories : à faire, en cours, en attente, à vérifier, terminées, archivées</li><li>Priorités : faible, normale, importante, urgente</li><li>Responsable, collaborateurs, date limite, pièces jointes, commentaires</li>
-        </ul>
+        <form id="tache-form" style="display:flex; gap:0.6rem; margin-bottom:1rem;">
+          <input type="text" id="f-text" placeholder="Noter une nouvelle tâche..." style="flex:1;" required>
+          <button type="submit" class="btn btn-gold">Ajouter</button>
+        </form>
+        <ul class="tache-list" id="tache-list"></ul>
+        <div id="tache-empty" class="empty-state" style="display:none;">Aucune tâche pour le moment.</div>
       </div>
     </div>
   </div>
@@ -29,5 +44,6 @@
 <script src="/js/api.js"></script>
 <script src="/js/utils.js"></script>
 <script src="/js/nav.js"></script>
+<script src="/js/pages/taches.js"></script>
 </body>
 </html>

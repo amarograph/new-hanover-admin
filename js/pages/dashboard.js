@@ -67,10 +67,4 @@ document.addEventListener('nh:ready', async (evt) => {
     recentTx.innerHTML = '<p class="muted">Vous n\'avez pas accès à la comptabilité.</p>';
   }
 
-  if (data.recent_activity && data.recent_activity.length) {
-    document.getElementById('activity-sheet').style.display = '';
-    document.getElementById('recent-activity').innerHTML = '<table><tbody>' + data.recent_activity.map((a) => `
-      <tr><td>${NH.formatDateTime(a.created_at)}</td><td>${NH.escapeHtml(a.user_name || 'Système')}</td><td>${NH.escapeHtml(a.action)}</td></tr>
-    `).join('') + '</tbody></table>';
-  }
 });

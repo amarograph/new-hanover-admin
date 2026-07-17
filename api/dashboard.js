@@ -14,11 +14,10 @@ export default async function handler(req, res) {
   const canCommuniques = hasPermission(user, 'communiques', 'view');
   const canAgenda = hasPermission(user, 'agenda', 'view');
   const canAccounting = hasPermission(user, 'accounting', 'view');
-  const canLog = hasPermission(user, 'admin', 'view_log');
 
   const [
     decreesEnPreparation, decreesAPublier, communiquesEnAttente,
-    upcomingEvents, accountingTotals, recentIn, recentOut, recentActivity,
+    upcomingEvents, accountingTotals, recentIn, recentOut,
   ] = await Promise.all([
     canDecrees
       ? db.prepare("SELECT COUNT(*)::int as c FROM decrees WHERE category IN ('a_faire','en_redaction')").first()
@@ -41,9 +40,6 @@ export default async function handler(req, res) {
     canAccounting
       ? db.prepare("SELECT * FROM transactions WHERE type='sortie' ORDER BY date DESC, created_at DESC LIMIT 5").all()
       : { results: [] },
-    canLog
-      ? db.prepare("SELECT l.*, u.discord_username as user_name FROM activity_log l LEFT JOIN users u ON u.id = l.user_id ORDER BY l.created_at DESC LIMIT 8").all()
-      : { results: [] },
   ]);
 
   return sendJson(res, {
@@ -56,6 +52,5 @@ export default async function handler(req, res) {
     balance: canAccounting ? (accountingTotals.total_in - accountingTotals.total_out) : null,
     recent_in: recentIn.results,
     recent_out: recentOut.results,
-    recent_activity: recentActivity.results,
   });
 }

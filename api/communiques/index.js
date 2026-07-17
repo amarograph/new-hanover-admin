@@ -8,6 +8,24 @@ const SELECT = `SELECT c.*, au.discord_username as author_name
   FROM communiques c
   LEFT JOIN users au ON au.id = c.author_id`;
 
+// La liste omet la colonne image (potentiellement volumineuse en base64)
+// pour ne pas alourdir la réponse ; seule la fiche détail la renvoie.
+const SELECT_LIST = SELECT.replace('c.*', `c.id, c.number, c.title, c.subject, c.author_id, c.created_at,
+    c.published_at, c.target_audience, c.status, c.updated_at`);
+
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+
+function validateImage(image) {
+  if (image === undefined || image === null || image === '') return null;
+  if (typeof image !== 'string' || !/^data:image\/(png|jpeg|jpg|gif|webp);base64,/.test(image)) {
+    throw new Error('Format d\'image invalide.');
+  }
+  if (image.length > MAX_IMAGE_BYTES * 1.4) {
+    throw new Error('Image trop volumineuse (2 Mo maximum).');
+  }
+  return image;
+}
+
 async function getCommunique(id) {
   return db.prepare(SELECT + ' WHERE c.id = ?').bind(id).first();
 }
@@ -16,7 +34,7 @@ async function list(req, res, user) {
   if (!hasPermission(user, 'communiques', 'view')) return sendError(res, 'Accès refusé', 403);
 
   const { status, q } = req.query;
-  let query = SELECT + ' WHERE 1=1';
+  let query = SELECT_LIST + ' WHERE 1=1';
   const binds = [];
   if (status) { query += ' AND c.status = ?'; binds.push(status); }
   if (q) { query += ' AND (c.title LIKE ? OR c.number LIKE ?)'; binds.push(`%${q}%`, `%${q}%`); }
@@ -32,15 +50,18 @@ async function create(req, res, user) {
   const body = req.body || {};
   if (!body.title) return sendError(res, 'Le titre est requis', 422);
 
+  let image;
+  try { image = validateImage(body.image); } catch (e) { return sendError(res, e.message, 422); }
+
   const number = await nextNumber(db, 'COM-NH', '1892');
   const status = body.status || 'a_faire';
   const result = await db.prepare(
-    `INSERT INTO communiques (number, title, subject, content, author_id, target_audience, attachments, status, internal_notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+    `INSERT INTO communiques (number, title, subject, content, author_id, target_audience, attachments, status, internal_notes, image)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
   ).bind(
     number, body.title, body.subject || '', body.content || '', user.id,
     body.target_audience || 'tous', JSON.stringify(body.attachments || []),
-    status, body.internal_notes || ''
+    status, body.internal_notes || '', image
   ).run();
 
   const id = result.meta.last_row_id;
@@ -85,14 +106,21 @@ export default async function handler(req, res) {
     const body = req.body || {};
     if (!body.title) return sendError(res, 'Le titre est requis', 422);
 
+    let image;
+    try { image = validateImage(body.image); } catch (e) { return sendError(res, e.message, 422); }
+    if (body.image === undefined) image = before.image;
+
     await db.prepare(
-      `UPDATE communiques SET title=?, subject=?, content=?, target_audience=?, attachments=?, internal_notes=?, updated_at=${NOW_EXPR} WHERE id=?`
+      `UPDATE communiques SET title=?, subject=?, content=?, target_audience=?, attachments=?, internal_notes=?, image=?, updated_at=${NOW_EXPR} WHERE id=?`
     ).bind(
       body.title, body.subject || '', body.content || '', body.target_audience || 'tous',
-      JSON.stringify(body.attachments || []), body.internal_notes || '', id
+      JSON.stringify(body.attachments || []), body.internal_notes || '', image, id
     ).run();
 
-    await logActivity(db, user.id, 'Modification du communiqué', 'communique', id, before, body);
+    // On exclut l'image (base64) du journal d'activité pour ne pas l'alourdir inutilement.
+    const { image: beforeImage, ...beforeLog } = before;
+    const { image: bodyImage, ...bodyLog } = body;
+    await logActivity(db, user.id, 'Modification du communiqué', 'communique', id, beforeLog, bodyLog);
     return sendJson(res, { ok: true });
   }
 
@@ -120,7 +148,8 @@ export default async function handler(req, res) {
     if (!before) return sendError(res, 'Communiqué introuvable', 404);
 
     await db.prepare('DELETE FROM communiques WHERE id=?').bind(id).run();
-    await logActivity(db, user.id, 'Suppression du communiqué', 'communique', id, before, null);
+    const { image: deletedImage, ...beforeLog } = before;
+    await logActivity(db, user.id, 'Suppression du communiqué', 'communique', id, beforeLog, null);
     return sendJson(res, { ok: true });
   }
 

@@ -82,6 +82,7 @@ CREATE TABLE IF NOT EXISTS communiques (
   attachments TEXT DEFAULT '[]',
   status TEXT NOT NULL DEFAULT 'a_faire',
   internal_notes TEXT,
+  image TEXT,
   updated_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
 );
 

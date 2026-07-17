@@ -10,6 +10,21 @@ const COM_CATEGORIES = [
 
 const comState = { status: '', q: '' };
 let currentUser = null;
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+// undefined = pas de changement, null = suppression demandée, string = nouvelle image
+let pendingImage;
+
+function renderImagePreview(imageDataUrl) {
+  const preview = document.getElementById('image-preview');
+  if (!imageDataUrl) { preview.innerHTML = ''; return; }
+  preview.innerHTML = `
+    <img src="${imageDataUrl}" style="max-width:220px; max-height:220px; border-radius:4px; display:block; margin-bottom:0.4rem;">
+    <button type="button" class="btn btn-outline btn-sm no-print" id="image-remove">Retirer l'image</button>`;
+  document.getElementById('image-remove').addEventListener('click', () => {
+    pendingImage = null;
+    renderImagePreview(null);
+  });
+}
 
 function comStatusActions(item) {
   const actions = [];
@@ -67,6 +82,10 @@ function fillForm(item) {
   const attachments = item.attachments ? JSON.parse(item.attachments) : [];
   document.getElementById('f-attachments').value = attachments.join('\n');
 
+  pendingImage = undefined;
+  document.getElementById('image-input').value = '';
+  renderImagePreview(item.image || null);
+
   const meta = document.getElementById('item-meta');
   meta.textContent = item.id
     ? `${item.number || ''} — Auteur : ${item.author_name || '—'} — Statut : ${NH.STATUS_LABELS[item.status] || item.status}${item.published_at ? ' — Publié le ' + NH.formatDate(item.published_at) : ''}`
@@ -91,6 +110,8 @@ function fillForm(item) {
   const canEdit = item.id ? NH.hasPermission(currentUser, 'communiques', 'edit') : NH.hasPermission(currentUser, 'communiques', 'add');
   document.getElementById('save-btn').style.display = canEdit ? '' : 'none';
   document.querySelectorAll('#item-form input, #item-form textarea, #item-form select').forEach((el) => { el.disabled = !canEdit; });
+  const removeBtn = document.getElementById('image-remove');
+  if (removeBtn && !canEdit) removeBtn.style.display = 'none';
 
   const canDelete = !!item.id && NH.hasPermission(currentUser, 'communiques', 'delete');
   document.getElementById('btn-delete').style.display = canDelete ? '' : 'none';
@@ -116,6 +137,22 @@ document.addEventListener('nh:ready', (evt) => {
   });
   document.getElementById('modal-close').addEventListener('click', () => NH.closeModal('item-modal'));
   document.getElementById('modal-cancel').addEventListener('click', () => NH.closeModal('item-modal'));
+
+  document.getElementById('image-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > MAX_IMAGE_BYTES) {
+      NH.toast('Image trop volumineuse (2 Mo maximum).', 'error');
+      e.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      pendingImage = reader.result;
+      renderImagePreview(pendingImage);
+    };
+    reader.readAsDataURL(file);
+  });
 
   document.getElementById('btn-delete').addEventListener('click', async () => {
     const id = document.getElementById('item-id').value;
@@ -145,6 +182,7 @@ document.addEventListener('nh:ready', (evt) => {
       internal_notes: document.getElementById('f-notes').value,
       attachments: document.getElementById('f-attachments').value.split('\n').map((s) => s.trim()).filter(Boolean),
     };
+    if (pendingImage !== undefined) payload.image = pendingImage;
     try {
       if (id) { await NH.put(`/api/communiques/${id}`, payload); NH.toast('Communiqué mis à jour.'); }
       else { payload.status = 'a_faire'; await NH.post('/api/communiques', payload); NH.toast('Communiqué créé.'); }

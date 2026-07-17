@@ -91,6 +91,9 @@ function fillForm(item) {
   const canEdit = item.id ? NH.hasPermission(currentUser, 'communiques', 'edit') : NH.hasPermission(currentUser, 'communiques', 'add');
   document.getElementById('save-btn').style.display = canEdit ? '' : 'none';
   document.querySelectorAll('#item-form input, #item-form textarea, #item-form select').forEach((el) => { el.disabled = !canEdit; });
+
+  const canDelete = !!item.id && NH.hasPermission(currentUser, 'communiques', 'delete');
+  document.getElementById('btn-delete').style.display = canDelete ? '' : 'none';
 }
 
 async function openModal(id) {
@@ -113,6 +116,17 @@ document.addEventListener('nh:ready', (evt) => {
   });
   document.getElementById('modal-close').addEventListener('click', () => NH.closeModal('item-modal'));
   document.getElementById('modal-cancel').addEventListener('click', () => NH.closeModal('item-modal'));
+
+  document.getElementById('btn-delete').addEventListener('click', async () => {
+    const id = document.getElementById('item-id').value;
+    if (!id || !NH.confirmAction('Supprimer ce communiqué ? Cette action est irréversible.')) return;
+    try {
+      await NH.del(`/api/communiques/${id}`);
+      NH.toast('Communiqué supprimé.');
+      NH.closeModal('item-modal');
+      loadItems();
+    } catch (e) { NH.toast(e.message, 'error'); }
+  });
 
   let searchTimer;
   document.getElementById('filter-q').addEventListener('input', (e) => {

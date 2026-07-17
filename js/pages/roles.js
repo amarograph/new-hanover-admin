@@ -2,7 +2,7 @@ const MODULES = [
   { key: 'decrees', label: 'Décrets', actions: ['view', 'add', 'edit', 'archive', 'delete', 'validate', 'download'] },
   { key: 'communiques', label: 'Communiqués', actions: ['view', 'add', 'edit', 'archive', 'delete', 'validate', 'download'] },
   { key: 'agenda', label: 'Agenda', actions: ['view', 'add', 'edit', 'archive', 'delete', 'download'] },
-  { key: 'accounting', label: 'Comptabilité', actions: ['view', 'add', 'edit', 'validate', 'download'] },
+  { key: 'accounting', label: 'Comptabilité', actions: ['view', 'add', 'edit', 'delete', 'validate', 'download'] },
   { key: 'admin', label: 'Administration du site', actions: ['manage_users', 'view_log'] },
 ];
 const ACTION_LABELS = {

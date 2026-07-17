@@ -70,7 +70,10 @@
       <div id="decree-meta" class="muted" style="margin-bottom:0.6rem;"></div>
 
       <div class="modal-actions no-print">
-        <div id="decree-status-actions" style="margin-right:auto; display:flex; gap:0.4rem; flex-wrap:wrap;"></div>
+        <div style="margin-right:auto; display:flex; gap:0.4rem; flex-wrap:wrap; align-items:center;">
+          <button type="button" class="btn btn-danger" id="decree-delete-btn" style="display:none;">Supprimer</button>
+          <div id="decree-status-actions" style="display:flex; gap:0.4rem; flex-wrap:wrap;"></div>
+        </div>
         <button type="button" class="btn btn-outline" id="decree-print-btn">Version imprimable</button>
         <button type="button" class="btn btn-outline" id="decree-modal-cancel">Annuler</button>
         <button type="submit" class="btn btn-gold" id="decree-save-btn">Enregistrer</button>

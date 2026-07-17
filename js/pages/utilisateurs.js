@@ -8,6 +8,7 @@ const USER_TABS = [
 ];
 let userState = { status: '' };
 let rolesCache = [];
+let currentUser = null;
 
 async function loadRoles() {
   const data = await NH.get('/api/roles');
@@ -56,11 +57,13 @@ async function openModal(id) {
     document.getElementById('f-arrival-date').value = u.arrival_date || '';
     document.getElementById('f-role').value = u.role_id || '';
     document.getElementById('f-status').value = u.status;
+    document.getElementById('btn-delete').style.display = (currentUser && u.id !== currentUser.id) ? '' : 'none';
     NH.openModal('user-modal');
   } catch (e) { NH.toast(e.message, 'error'); }
 }
 
-document.addEventListener('nh:ready', async () => {
+document.addEventListener('nh:ready', async (evt) => {
+  currentUser = evt.detail;
   await loadRoles();
   renderTabs();
   loadUsers();
@@ -69,6 +72,17 @@ document.addEventListener('nh:ready', async () => {
 
   document.getElementById('modal-close').addEventListener('click', () => NH.closeModal('user-modal'));
   document.getElementById('modal-cancel').addEventListener('click', () => NH.closeModal('user-modal'));
+
+  document.getElementById('btn-delete').addEventListener('click', async () => {
+    const id = document.getElementById('f-id').value;
+    if (!id || !NH.confirmAction('Supprimer ce compte utilisateur ? Ses décrets, communiqués et transactions seront conservés mais détachés de son nom. Cette action est irréversible.')) return;
+    try {
+      await NH.del(`/api/users/${id}`);
+      NH.toast('Compte supprimé.');
+      NH.closeModal('user-modal');
+      loadUsers();
+    } catch (e) { NH.toast(e.message, 'error'); }
+  });
 
   document.getElementById('user-form').addEventListener('submit', async (e) => {
     e.preventDefault();

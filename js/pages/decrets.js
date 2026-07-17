@@ -131,6 +131,9 @@ function fillDecreeForm(decree) {
   document.querySelectorAll('#decree-form input, #decree-form textarea, #decree-form select').forEach((el) => { el.disabled = !canEdit; });
   const removeBtn = document.getElementById('decree-image-remove');
   if (removeBtn && !canEdit) removeBtn.style.display = 'none';
+
+  const canDelete = !!decree.id && NH.hasPermission(currentUser, 'decrees', 'delete');
+  document.getElementById('decree-delete-btn').style.display = canDelete ? '' : 'none';
 }
 
 async function openDecreeModal(id) {
@@ -180,6 +183,17 @@ document.addEventListener('nh:ready', (evt) => {
   document.getElementById('decree-modal-close').addEventListener('click', () => NH.closeModal('decree-modal'));
   document.getElementById('decree-modal-cancel').addEventListener('click', () => NH.closeModal('decree-modal'));
   document.getElementById('decree-print-btn').addEventListener('click', printDecree);
+
+  document.getElementById('decree-delete-btn').addEventListener('click', async () => {
+    const id = document.getElementById('decree-id').value;
+    if (!id || !NH.confirmAction('Supprimer ce décret ? Cette action est irréversible.')) return;
+    try {
+      await NH.del(`/api/decrees/${id}`);
+      NH.toast('Décret supprimé.');
+      NH.closeModal('decree-modal');
+      loadDecrees();
+    } catch (e) { NH.toast(e.message, 'error'); }
+  });
 
   document.getElementById('decree-image-input').addEventListener('change', (e) => {
     const file = e.target.files[0];

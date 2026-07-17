@@ -157,6 +157,17 @@ export default async function handler(req, res) {
     return sendJson(res, { ok: true });
   }
 
-  res.setHeader('Allow', 'GET, PUT, PATCH');
+  if (req.method === 'DELETE') {
+    if (!hasPermission(user, 'accounting', 'delete')) return sendError(res, 'Accès refusé', 403);
+    const before = await getTransaction(id);
+    if (!before) return sendError(res, 'Transaction introuvable', 404);
+    if (before.validation_status === 'validee') return sendError(res, 'Une transaction validée ne peut plus être supprimée', 409);
+
+    await db.prepare('DELETE FROM transactions WHERE id=?').bind(id).run();
+    await logActivity(db, user.id, 'Suppression d\'une transaction', 'transaction', id, before, null);
+    return sendJson(res, { ok: true });
+  }
+
+  res.setHeader('Allow', 'GET, PUT, PATCH, DELETE');
   return sendError(res, 'Méthode non autorisée', 405);
 }

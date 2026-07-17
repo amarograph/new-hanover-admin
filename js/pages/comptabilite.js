@@ -94,6 +94,9 @@ function fillForm(t) {
   const canEdit = t.id ? (NH.hasPermission(currentUser, 'accounting', 'edit') && t.validation_status !== 'validee') : NH.hasPermission(currentUser, 'accounting', 'add');
   document.getElementById('save-btn').style.display = canEdit ? '' : 'none';
   document.querySelectorAll('#tx-form input, #tx-form textarea, #tx-form select').forEach((el) => { el.disabled = !canEdit; });
+
+  const canDelete = !!t.id && t.validation_status !== 'validee' && NH.hasPermission(currentUser, 'accounting', 'delete');
+  document.getElementById('btn-delete').style.display = canDelete ? '' : 'none';
 }
 
 async function openModal(id) {
@@ -127,6 +130,17 @@ document.addEventListener('nh:ready', (evt) => {
   });
   document.getElementById('modal-close').addEventListener('click', () => NH.closeModal('tx-modal'));
   document.getElementById('modal-cancel').addEventListener('click', () => NH.closeModal('tx-modal'));
+
+  document.getElementById('btn-delete').addEventListener('click', async () => {
+    const id = document.getElementById('f-id').value;
+    if (!id || !NH.confirmAction('Supprimer cette transaction ? Cette action est irréversible.')) return;
+    try {
+      await NH.del(`/api/accounting/${id}`);
+      NH.toast('Transaction supprimée.');
+      NH.closeModal('tx-modal');
+      loadTransactions(); loadSummary();
+    } catch (e) { NH.toast(e.message, 'error'); }
+  });
   document.getElementById('f-type').addEventListener('change', updateCategoryOptions);
   document.getElementById('btn-export').addEventListener('click', exportCsv);
 

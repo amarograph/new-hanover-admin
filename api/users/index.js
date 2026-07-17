@@ -66,6 +66,26 @@ export default async function handler(req, res) {
     return sendJson(res, { ok: true });
   }
 
-  res.setHeader('Allow', 'GET, PATCH');
+  if (req.method === 'DELETE') {
+    if (Number(id) === user.id) return sendError(res, 'Vous ne pouvez pas supprimer votre propre compte', 400);
+    const before = await db.prepare('SELECT * FROM users WHERE id=?').bind(id).first();
+    if (!before) return sendError(res, 'Utilisateur introuvable', 404);
+
+    // Les créations de cet utilisateur ne sont pas supprimées, seulement
+    // détachées (auteur/organisateur mis à NULL), pour préserver l'historique.
+    await db.prepare('DELETE FROM sessions WHERE user_id=?').bind(id).run();
+    await db.prepare('UPDATE activity_log SET user_id=NULL WHERE user_id=?').bind(id).run();
+    await db.prepare('UPDATE decrees SET author_id=NULL WHERE author_id=?').bind(id).run();
+    await db.prepare('UPDATE decrees SET validated_by_id=NULL WHERE validated_by_id=?').bind(id).run();
+    await db.prepare('UPDATE communiques SET author_id=NULL WHERE author_id=?').bind(id).run();
+    await db.prepare('UPDATE agenda_events SET organizer_id=NULL WHERE organizer_id=?').bind(id).run();
+    await db.prepare('UPDATE transactions SET author_id=NULL WHERE author_id=?').bind(id).run();
+    await db.prepare('DELETE FROM users WHERE id=?').bind(id).run();
+
+    await logActivity(db, user.id, 'Suppression du compte utilisateur', 'user', id, before, null);
+    return sendJson(res, { ok: true });
+  }
+
+  res.setHeader('Allow', 'GET, PATCH, DELETE');
   return sendError(res, 'Méthode non autorisée', 405);
 }

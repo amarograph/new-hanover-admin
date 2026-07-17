@@ -1,11 +1,27 @@
 import { db, NOW_EXPR } from '../../lib/db.js';
-import { makeSessionCookie, SESSION_MAX_AGE } from '../../lib/auth.js';
+import { getSessionUser, getCookie, makeSessionCookie, clearSessionCookie, SESSION_COOKIE, SESSION_MAX_AGE } from '../../lib/auth.js';
 import { logActivity } from '../../lib/log.js';
+import { sendJson, sendError } from '../../lib/respond.js';
+
+async function login(req, res) {
+  if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_REDIRECT_URI) {
+    res.status(500).send('Discord OAuth n\'est pas configuré (DISCORD_CLIENT_ID / DISCORD_REDIRECT_URI manquants).');
+    return;
+  }
+  const params = new URLSearchParams({
+    client_id: process.env.DISCORD_CLIENT_ID,
+    redirect_uri: process.env.DISCORD_REDIRECT_URI,
+    response_type: 'code',
+    scope: 'identify',
+    prompt: 'consent',
+  });
+  res.redirect(302, `https://discord.com/oauth2/authorize?${params.toString()}`);
+}
 
 // Étape unique où l'on parle à Discord : seuls l'ID et le pseudo Discord
 // sont extraits de la réponse et conservés. Aucune autre donnée
 // (avatar, email, discriminator...) n'est lue ni stockée.
-export default async function handler(req, res) {
+async function callback(req, res) {
   const code = req.query.code;
 
   if (!code) {
@@ -85,4 +101,44 @@ export default async function handler(req, res) {
 
   res.setHeader('Set-Cookie', makeSessionCookie(token));
   res.redirect(302, '/dashboard.html');
+}
+
+async function logout(req, res) {
+  const token = getCookie(req, SESSION_COOKIE);
+  if (token) {
+    await db.prepare('DELETE FROM sessions WHERE token = ?').bind(token).run();
+  }
+  res.setHeader('Set-Cookie', clearSessionCookie());
+  res.redirect(302, '/');
+}
+
+async function me(req, res) {
+  const user = await getSessionUser(req);
+  if (!user) return res.status(200).json({ authenticated: false });
+
+  const {
+    id, discord_id, discord_username, character_first_name, character_last_name,
+    job_title, grade, arrival_date, last_login, status, role, permissions,
+  } = user;
+
+  res.status(200).json({
+    authenticated: true,
+    user: {
+      id, discord_id, discord_username, character_first_name, character_last_name,
+      job_title, grade, arrival_date, last_login, status,
+      role: role ? { id: role.id, name: role.name } : null,
+      permissions,
+    },
+  });
+}
+
+export default async function handler(req, res) {
+  const action = Array.isArray(req.query.action) ? req.query.action[0] : req.query.action;
+
+  if (action === 'login' && req.method === 'GET') return login(req, res);
+  if (action === 'callback' && req.method === 'GET') return callback(req, res);
+  if (action === 'logout' && req.method === 'POST') return logout(req, res);
+  if (action === 'me' && req.method === 'GET') return me(req, res);
+
+  return sendError(res, 'Route inconnue', 404);
 }

@@ -1,6 +1,6 @@
-import { db } from '../../lib/db.js';
-import { getSessionUser, hasPermission } from '../../lib/auth.js';
-import { sendJson, sendError } from '../../lib/respond.js';
+import { db } from '../lib/db.js';
+import { getSessionUser, hasPermission } from '../lib/auth.js';
+import { sendJson, sendError } from '../lib/respond.js';
 
 export default async function handler(req, res) {
   const user = await getSessionUser(req);

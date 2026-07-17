@@ -10,6 +10,7 @@ const MODULES = [
   { key: 'boite_lettres', label: 'Boîte aux lettres', actions: ['view', 'add', 'edit', 'delete'] },
   { key: 'armes', label: 'Registre des armes', actions: ['view', 'add', 'edit', 'delete'] },
   { key: 'chevaux', label: 'Registre des chevaux', actions: ['view', 'add', 'edit', 'delete'] },
+  { key: 'inventaire', label: 'Inventaire du coffre', actions: ['view', 'add', 'edit', 'delete'] },
   { key: 'admin', label: 'Administration du site', actions: ['manage_users', 'view_log'] },
 ];
 const ACTION_LABELS = {

@@ -570,7 +570,116 @@ export default async function handler(req, res) {
   if (req.query.resource === 'boite_lettres') return handleBoiteLettres(req, res, user, slug);
   if (req.query.resource === 'armes') return handleArmes(req, res, user, slug);
   if (req.query.resource === 'chevaux') return handleChevaux(req, res, user, slug);
+  if (req.query.resource === 'inventaire') return handleInventaire(req, res, user, slug);
   return handleEntreprises(req, res, user, slug);
+}
+
+// ---------------------------------------------------------------------------
+// Inventaire du coffre (?resource=inventaire). Alerte visuelle côté
+// frontend quand la quantité descend au niveau ou en dessous du seuil.
+// ---------------------------------------------------------------------------
+
+const INV_SELECT = `SELECT i.*, au.discord_username as author_name
+  FROM inventaire i
+  LEFT JOIN users au ON au.id = i.author_id`;
+
+const INV_CATEGORIES = [
+  'documents', 'materiel_administratif', 'armes', 'munitions',
+  'fournitures', 'objets_saisis', 'objets_valeur', 'materiel_evenementiel',
+];
+
+async function getInventaireItem(id) {
+  return db.prepare(INV_SELECT + ' WHERE i.id = ?').bind(id).first();
+}
+
+async function listInventaire(req, res, user) {
+  if (!hasPermission(user, 'inventaire', 'view')) return sendError(res, 'Accès refusé', 403);
+
+  const { category, q } = req.query;
+  let query = INV_SELECT + ' WHERE 1=1';
+  const binds = [];
+  if (category) { query += ' AND i.category = ?'; binds.push(category); }
+  if (q) { query += ' AND (i.name LIKE ? OR i.number LIKE ?)'; binds.push(`%${q}%`, `%${q}%`); }
+  query += ' ORDER BY i.name ASC';
+
+  const { results } = await db.prepare(query).bind(...binds).all();
+  return sendJson(res, { inventaire: results });
+}
+
+function readInventaireBody(body) {
+  return {
+    name: body.name,
+    category: INV_CATEGORIES.includes(body.category) ? body.category : 'documents',
+    quantity: body.quantity !== undefined && body.quantity !== '' ? Number(body.quantity) : 0,
+    threshold: body.threshold !== undefined && body.threshold !== '' ? Number(body.threshold) : 0,
+    notes: body.notes || '',
+  };
+}
+
+async function createInventaireItem(req, res, user) {
+  if (!hasPermission(user, 'inventaire', 'add')) return sendError(res, 'Accès refusé', 403);
+
+  const body = req.body || {};
+  if (!body.name) return sendError(res, 'Le nom de l\'objet est requis', 422);
+  const f = readInventaireBody(body);
+
+  const number = await nextNumber(db, 'INV-NH');
+  const result = await db.prepare(
+    `INSERT INTO inventaire (number, name, category, quantity, threshold, notes, author_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id`
+  ).bind(number, f.name, f.category, f.quantity, f.threshold, f.notes, user.id).run();
+
+  const id = result.meta.last_row_id;
+  await logActivity(db, user.id, 'Ajout d\'un objet à l\'inventaire du coffre', 'inventaire', id, null, { number, name: f.name });
+  return sendJson(res, { id, number }, 201);
+}
+
+async function handleInventaire(req, res, user, slug) {
+  if (slug.length === 0) {
+    if (req.method === 'GET') return listInventaire(req, res, user);
+    if (req.method === 'POST') return createInventaireItem(req, res, user);
+    res.setHeader('Allow', 'GET, POST');
+    return sendError(res, 'Méthode non autorisée', 405);
+  }
+
+  const id = slug[0];
+
+  if (req.method === 'GET') {
+    if (!hasPermission(user, 'inventaire', 'view')) return sendError(res, 'Accès refusé', 403);
+    const item = await getInventaireItem(id);
+    if (!item) return sendError(res, 'Objet introuvable', 404);
+    return sendJson(res, { item });
+  }
+
+  if (req.method === 'PUT') {
+    if (!hasPermission(user, 'inventaire', 'edit')) return sendError(res, 'Accès refusé', 403);
+    const before = await getInventaireItem(id);
+    if (!before) return sendError(res, 'Objet introuvable', 404);
+
+    const body = req.body || {};
+    if (!body.name) return sendError(res, 'Le nom de l\'objet est requis', 422);
+    const f = readInventaireBody(body);
+
+    await db.prepare(
+      `UPDATE inventaire SET name=?, category=?, quantity=?, threshold=?, notes=?, updated_at=${NOW_EXPR} WHERE id=?`
+    ).bind(f.name, f.category, f.quantity, f.threshold, f.notes, id).run();
+
+    await logActivity(db, user.id, 'Modification d\'un objet de l\'inventaire du coffre', 'inventaire', id, before, body);
+    return sendJson(res, { ok: true });
+  }
+
+  if (req.method === 'DELETE') {
+    if (!hasPermission(user, 'inventaire', 'delete')) return sendError(res, 'Accès refusé', 403);
+    const before = await getInventaireItem(id);
+    if (!before) return sendError(res, 'Objet introuvable', 404);
+
+    await db.prepare('DELETE FROM inventaire WHERE id=?').bind(id).run();
+    await logActivity(db, user.id, 'Suppression d\'un objet de l\'inventaire du coffre', 'inventaire', id, before, null);
+    return sendJson(res, { ok: true });
+  }
+
+  res.setHeader('Allow', 'GET, POST, PUT, DELETE');
+  return sendError(res, 'Méthode non autorisée', 405);
 }
 
 // ---------------------------------------------------------------------------

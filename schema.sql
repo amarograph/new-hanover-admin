@@ -209,6 +209,20 @@ CREATE TABLE IF NOT EXISTS chevaux (
 );
 CREATE INDEX IF NOT EXISTS idx_chevaux_status ON chevaux(status);
 
+CREATE TABLE IF NOT EXISTS inventaire (
+  id SERIAL PRIMARY KEY,
+  number TEXT UNIQUE,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'documents',
+  quantity INTEGER NOT NULL DEFAULT 0,
+  threshold INTEGER NOT NULL DEFAULT 0,
+  notes TEXT,
+  author_id INTEGER REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'),
+  updated_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
+);
+CREATE INDEX IF NOT EXISTS idx_inventaire_category ON inventaire(category);
+
 CREATE TABLE IF NOT EXISTS transactions (
   id SERIAL PRIMARY KEY,
   number TEXT UNIQUE,

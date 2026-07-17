@@ -191,3 +191,14 @@ NH.CHEVAL_STATUS_STAMP_CLASS = {
   saisi: 'stamp-gold',
   archive: 'stamp-grey',
 };
+
+NH.INV_CATEGORY_LABELS = {
+  documents: 'Documents',
+  materiel_administratif: 'Matériel administratif',
+  armes: 'Armes',
+  munitions: 'Munitions',
+  fournitures: 'Fournitures',
+  objets_saisis: 'Objets saisis',
+  objets_valeur: 'Objets de valeur',
+  materiel_evenementiel: 'Matériel événementiel',
+};

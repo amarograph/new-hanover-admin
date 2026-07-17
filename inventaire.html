@@ -6,28 +6,84 @@
 <title>Inventaire — Administration de New Hanover</title>
 <link rel="icon" type="image/png" href="/css/img/favicon.png">
 <link rel="stylesheet" href="/css/theme.css">
+<style>
+  tr.low-stock td { color: var(--bordeaux-bright); font-weight: 600; }
+</style>
 </head>
-<body data-page="inventaire">
+<body data-page="inventaire" data-require-permission="inventaire:view">
 <div class="app-shell">
   <aside class="sidebar" id="sidebar"></aside>
   <div class="main">
     <header class="topbar" id="topbar"></header>
     <div class="content" id="content">
-      <h1>Inventaire du coffre</h1>
+      <div class="flex-between">
+        <h1>Inventaire du coffre</h1>
+        <button class="btn btn-gold" id="btn-new">+ Ajouter un objet</button>
+      </div>
+
+      <div class="tabs" id="category-tabs"></div>
+
+      <div class="sheet" style="display:flex; gap:0.8rem; align-items:flex-end;">
+        <div class="field" style="margin:0; flex:1;">
+          <label>Rechercher par nom ou numéro</label>
+          <input type="search" id="filter-q" placeholder="INV-NH-001 ou mot-clé...">
+        </div>
+      </div>
+
       <div class="sheet">
-        <span class="stamp stamp-gold" style="margin-bottom:0.8rem;">Module à venir</span>
-        <p>Gestion des biens stockés dans le coffre de l'administration, avec suivi des mouvements.</p>
-        
-        <h3>Prévu pour ce module</h3>
-        <ul class="muted" style="line-height:1.9;">
-          <li>Catégories : documents, matériel administratif, armes, munitions, fournitures, objets saisis, objets de valeur, matériel événementiel</li><li>Mouvements d'entrée/sortie avec employé responsable, motif et solde restant</li><li>Alerte automatique sous le seuil minimal souhaité</li>
-        </ul>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Numéro</th><th>Objet</th><th>Catégorie</th><th class="text-right">Quantité</th><th class="text-right">Seuil minimal</th></tr></thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+        <div id="table-empty" class="empty-state" style="display:none;">Aucun objet dans cette catégorie.</div>
       </div>
     </div>
   </div>
 </div>
+
+<div class="modal-backdrop" id="item-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Nouvel objet</h2>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <form id="item-form">
+      <input type="hidden" id="f-id">
+      <div class="field"><label>Nom de l'objet</label><input type="text" id="f-name" required></div>
+      <div class="field"><label>Catégorie</label>
+        <select id="f-category">
+          <option value="documents">Documents</option>
+          <option value="materiel_administratif">Matériel administratif</option>
+          <option value="armes">Armes</option>
+          <option value="munitions">Munitions</option>
+          <option value="fournitures">Fournitures</option>
+          <option value="objets_saisis">Objets saisis</option>
+          <option value="objets_valeur">Objets de valeur</option>
+          <option value="materiel_evenementiel">Matériel événementiel</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Quantité actuelle</label><input type="number" min="0" id="f-quantity" value="0"></div>
+        <div class="field"><label>Seuil minimal (alerte)</label><input type="number" min="0" id="f-threshold" value="0"></div>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="f-notes" style="min-height:60px;"></textarea></div>
+
+      <div id="item-meta" class="muted" style="margin-bottom:0.6rem;"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-danger" id="btn-delete" style="margin-right:auto; display:none;">Supprimer</button>
+        <button type="button" class="btn btn-outline" id="modal-cancel">Annuler</button>
+        <button type="submit" class="btn btn-gold" id="save-btn">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script src="/js/api.js"></script>
 <script src="/js/utils.js"></script>
 <script src="/js/nav.js"></script>
+<script src="/js/pages/inventaire.js"></script>
 </body>
 </html>

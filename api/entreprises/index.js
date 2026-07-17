@@ -304,7 +304,8 @@ async function handleTaches(req, res, user, slug) {
 // expédiées, pour en garder le suivi (?resource=courriers).
 // ---------------------------------------------------------------------------
 
-const COURRIER_SELECT = `SELECT c.*, au.discord_username as author_name
+const COURRIER_SELECT = `SELECT c.*, au.discord_username as author_name,
+    au.character_first_name as author_first_name, au.character_last_name as author_last_name, au.grade as author_grade
   FROM courriers c
   LEFT JOIN users au ON au.id = c.author_id`;
 

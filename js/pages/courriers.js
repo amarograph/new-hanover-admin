@@ -45,7 +45,23 @@ Votre contribution est précieuse pour notre communauté.
 
 Pour l'Administration du Comté de New Hanover.`,
   },
+  administrative: {
+    subject: 'Lettre administrative',
+    content: `Monsieur/Madame [Nom],
+
+Nous avons l'honneur de vous informer de ce qui suit : [objet de la communication].
+
+Nous restons à votre disposition pour toute information complémentaire.
+
+Pour l'Administration du Comté de New Hanover.`,
+  },
 };
+
+function signatureBlock() {
+  const name = `${currentUser.character_first_name || ''} ${currentUser.character_last_name || ''}`.trim();
+  if (!name) return '';
+  return currentUser.grade ? `${name}\n${currentUser.grade}` : name;
+}
 
 const courrierState = { status: '', q: '' };
 let currentUser = null;
@@ -81,12 +97,13 @@ function fillForm(item) {
   document.getElementById('f-id').value = item.id || '';
   document.getElementById('f-recipient').value = item.recipient || '';
   document.getElementById('f-subject').value = item.subject || '';
-  document.getElementById('f-content').value = item.content || '';
+  document.getElementById('f-content').value = item.id ? (item.content || '') : signatureBlock();
   document.getElementById('f-template').value = '';
   document.getElementById('template-field').style.display = item.id ? 'none' : '';
 
+  const authorName = item.id ? `${item.author_first_name || ''} ${item.author_last_name || ''}`.trim() || item.author_name : '';
   document.getElementById('item-meta').textContent = item.id
-    ? `${item.number || ''} — Rédigé par ${item.author_name || '—'}${item.sent_at ? ' — Envoyé le ' + NH.formatDateTime(item.sent_at) : ''}`
+    ? `${item.number || ''} — Signé par ${authorName || '—'}${item.author_grade ? ' (' + item.author_grade + ')' : ''}${item.sent_at ? ' — Envoyé le ' + NH.formatDateTime(item.sent_at) : ''}`
     : '';
   document.getElementById('modal-title').textContent = item.id ? 'Courrier' : 'Nouveau courrier';
 
@@ -126,7 +143,8 @@ document.addEventListener('nh:ready', (evt) => {
     const tpl = COURRIER_TEMPLATES[e.target.value];
     if (!tpl) return;
     document.getElementById('f-subject').value = tpl.subject;
-    document.getElementById('f-content').value = tpl.content;
+    const sig = signatureBlock();
+    document.getElementById('f-content').value = sig ? `${tpl.content}\n\n${sig}` : tpl.content;
   });
 
   document.getElementById('btn-mark-sent').addEventListener('click', async () => {

@@ -147,6 +147,19 @@ CREATE TABLE IF NOT EXISTS taches (
   updated_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
 );
 
+CREATE TABLE IF NOT EXISTS courriers (
+  id SERIAL PRIMARY KEY,
+  number TEXT UNIQUE,
+  recipient TEXT,
+  subject TEXT NOT NULL,
+  content TEXT,
+  status TEXT NOT NULL DEFAULT 'a_envoyer',
+  author_id INTEGER REFERENCES users(id),
+  sent_at TEXT,
+  created_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'),
+  updated_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
+);
+
 CREATE TABLE IF NOT EXISTS transactions (
   id SERIAL PRIMARY KEY,
   number TEXT UNIQUE,

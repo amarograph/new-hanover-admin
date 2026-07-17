@@ -7,27 +7,69 @@
 <link rel="icon" type="image/png" href="/css/img/favicon.png">
 <link rel="stylesheet" href="/css/theme.css">
 </head>
-<body data-page="courriers">
+<body data-page="courriers" data-require-permission="courriers:view">
 <div class="app-shell">
   <aside class="sidebar" id="sidebar"></aside>
   <div class="main">
     <header class="topbar" id="topbar"></header>
     <div class="content" id="content">
-      <h1>Gestion des courriers</h1>
+      <div class="flex-between">
+        <h1>Gestion des courriers</h1>
+        <button class="btn btn-gold" id="btn-new">+ Rédiger un courrier</button>
+      </div>
+
+      <div class="tabs" id="status-tabs"></div>
+
       <div class="sheet">
-        <span class="stamp stamp-gold" style="margin-bottom:0.8rem;">Module à venir</span>
-        <p>Courriers reçus et courriers à envoyer, avec suivi des réponses.</p>
-        <p class="muted">Format de numérotation prévu : <code>CR-NH-1892-001 (reçu) / CE-NH-1892-001 (envoyé)</code></p>
-        <h3>Prévu pour ce module</h3>
-        <ul class="muted" style="line-height:1.9;">
-          <li>Sous-parties : reçus, à traiter, réponses à préparer, à envoyer, envoyés, archives</li><li>Statuts : reçu, non lu, lu, en cours de traitement, en attente de réponse, réponse rédigée, envoyé, archivé</li><li>Employé responsable, priorité, pièces jointes, notes internes</li>
-        </ul>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Numéro</th><th>Destinataire</th><th>Sujet</th><th>Rédigé le</th><th>Statut</th></tr></thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+        <div id="table-empty" class="empty-state" style="display:none;">Aucun courrier.</div>
       </div>
     </div>
   </div>
 </div>
+
+<div class="modal-backdrop" id="item-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Nouveau courrier</h2>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <form id="item-form">
+      <input type="hidden" id="f-id">
+      <div class="field" id="template-field">
+        <label>Modèle de lettre</label>
+        <select id="f-template">
+          <option value="">— Choisir un modèle (facultatif) —</option>
+          <option value="convocation">Convocation officielle</option>
+          <option value="avertissement">Avertissement officiel</option>
+          <option value="decret">Notification de décret</option>
+          <option value="remerciement">Lettre de remerciement</option>
+        </select>
+      </div>
+      <div class="field"><label>Destinataire</label><input type="text" id="f-recipient"></div>
+      <div class="field"><label>Sujet</label><input type="text" id="f-subject" required></div>
+      <div class="field"><label>Contenu</label><textarea id="f-content" style="min-height:220px;"></textarea></div>
+
+      <div id="item-meta" class="muted" style="margin-bottom:0.6rem;"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-danger" id="btn-delete" style="margin-right:auto; display:none;">Supprimer</button>
+        <button type="button" class="btn btn-outline" id="btn-mark-sent" style="display:none;">Marquer comme envoyée</button>
+        <button type="button" class="btn btn-outline" id="modal-cancel">Annuler</button>
+        <button type="submit" class="btn btn-gold" id="save-btn">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script src="/js/api.js"></script>
 <script src="/js/utils.js"></script>
 <script src="/js/nav.js"></script>
+<script src="/js/pages/courriers.js"></script>
 </body>
 </html>

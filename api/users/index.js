@@ -83,6 +83,7 @@ export default async function handler(req, res) {
     await db.prepare('UPDATE entreprises SET author_id=NULL WHERE author_id=?').bind(id).run();
     await db.prepare('UPDATE employes SET author_id=NULL WHERE author_id=?').bind(id).run();
     await db.prepare('UPDATE taches SET author_id=NULL WHERE author_id=?').bind(id).run();
+    await db.prepare('UPDATE courriers SET author_id=NULL WHERE author_id=?').bind(id).run();
     await db.prepare('DELETE FROM users WHERE id=?').bind(id).run();
 
     await logActivity(db, user.id, 'Suppression du compte utilisateur', 'user', id, before, null);

@@ -10,6 +10,8 @@
     { "source": "/api/employes/:id", "destination": "/api/entreprises?resource=employes&slug=:id" },
     { "source": "/api/taches", "destination": "/api/entreprises?resource=taches" },
     { "source": "/api/taches/:id", "destination": "/api/entreprises?resource=taches&slug=:id" },
+    { "source": "/api/courriers", "destination": "/api/entreprises?resource=courriers" },
+    { "source": "/api/courriers/:id", "destination": "/api/entreprises?resource=courriers&slug=:id" },
     { "source": "/api/roles/:id", "destination": "/api/roles?slug=:id" },
     { "source": "/api/users/:id", "destination": "/api/users?slug=:id" }
   ]

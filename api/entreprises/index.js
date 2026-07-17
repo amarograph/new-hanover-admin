@@ -299,11 +299,118 @@ async function handleTaches(req, res, user, slug) {
   return sendError(res, 'Méthode non autorisée', 405);
 }
 
+// ---------------------------------------------------------------------------
+// Courriers : lettres à envoyer, qui basculent vers "envoyées" une fois
+// expédiées, pour en garder le suivi (?resource=courriers).
+// ---------------------------------------------------------------------------
+
+const COURRIER_SELECT = `SELECT c.*, au.discord_username as author_name
+  FROM courriers c
+  LEFT JOIN users au ON au.id = c.author_id`;
+
+async function getCourrier(id) {
+  return db.prepare(COURRIER_SELECT + ' WHERE c.id = ?').bind(id).first();
+}
+
+async function listCourriers(req, res, user) {
+  if (!hasPermission(user, 'courriers', 'view')) return sendError(res, 'Accès refusé', 403);
+
+  const { status, q } = req.query;
+  let query = COURRIER_SELECT + ' WHERE 1=1';
+  const binds = [];
+  if (status) { query += ' AND c.status = ?'; binds.push(status); }
+  if (q) { query += ' AND (c.subject LIKE ? OR c.recipient LIKE ? OR c.number LIKE ?)'; binds.push(`%${q}%`, `%${q}%`, `%${q}%`); }
+  query += ' ORDER BY c.created_at DESC';
+
+  const { results } = await db.prepare(query).bind(...binds).all();
+  return sendJson(res, { courriers: results });
+}
+
+async function createCourrier(req, res, user) {
+  if (!hasPermission(user, 'courriers', 'add')) return sendError(res, 'Accès refusé', 403);
+
+  const body = req.body || {};
+  if (!body.subject) return sendError(res, 'Le sujet est requis', 422);
+
+  const number = await nextNumber(db, 'CE-NH', '1892');
+  const result = await db.prepare(
+    `INSERT INTO courriers (number, recipient, subject, content, author_id)
+     VALUES (?, ?, ?, ?, ?) RETURNING id`
+  ).bind(number, body.recipient || '', body.subject, body.content || '', user.id).run();
+
+  const id = result.meta.last_row_id;
+  await logActivity(db, user.id, 'Création du courrier', 'courrier', id, null, { number, subject: body.subject });
+  return sendJson(res, { id, number }, 201);
+}
+
+async function handleCourriers(req, res, user, slug) {
+  if (slug.length === 0) {
+    if (req.method === 'GET') return listCourriers(req, res, user);
+    if (req.method === 'POST') return createCourrier(req, res, user);
+    res.setHeader('Allow', 'GET, POST');
+    return sendError(res, 'Méthode non autorisée', 405);
+  }
+
+  const id = slug[0];
+
+  if (req.method === 'GET') {
+    if (!hasPermission(user, 'courriers', 'view')) return sendError(res, 'Accès refusé', 403);
+    const courrier = await getCourrier(id);
+    if (!courrier) return sendError(res, 'Courrier introuvable', 404);
+    return sendJson(res, { courrier });
+  }
+
+  if (req.method === 'PUT') {
+    if (!hasPermission(user, 'courriers', 'edit')) return sendError(res, 'Accès refusé', 403);
+    const before = await getCourrier(id);
+    if (!before) return sendError(res, 'Courrier introuvable', 404);
+    if (before.status === 'envoye') return sendError(res, 'Un courrier déjà envoyé ne peut plus être modifié', 409);
+
+    const body = req.body || {};
+    if (!body.subject) return sendError(res, 'Le sujet est requis', 422);
+
+    await db.prepare(
+      `UPDATE courriers SET recipient=?, subject=?, content=?, updated_at=${NOW_EXPR} WHERE id=?`
+    ).bind(body.recipient || '', body.subject, body.content || '', id).run();
+
+    await logActivity(db, user.id, 'Modification du courrier', 'courrier', id, before, body);
+    return sendJson(res, { ok: true });
+  }
+
+  if (req.method === 'PATCH') {
+    if (!hasPermission(user, 'courriers', 'edit')) return sendError(res, 'Accès refusé', 403);
+    const before = await getCourrier(id);
+    if (!before) return sendError(res, 'Courrier introuvable', 404);
+    if (before.status === 'envoye') return sendError(res, 'Ce courrier a déjà été envoyé', 409);
+
+    await db.prepare(
+      `UPDATE courriers SET status='envoye', sent_at=${NOW_EXPR}, updated_at=${NOW_EXPR} WHERE id=?`
+    ).bind(id).run();
+
+    await logActivity(db, user.id, 'Courrier marqué comme envoyé', 'courrier', id, { status: before.status }, { status: 'envoye' });
+    return sendJson(res, { ok: true });
+  }
+
+  if (req.method === 'DELETE') {
+    if (!hasPermission(user, 'courriers', 'delete')) return sendError(res, 'Accès refusé', 403);
+    const before = await getCourrier(id);
+    if (!before) return sendError(res, 'Courrier introuvable', 404);
+
+    await db.prepare('DELETE FROM courriers WHERE id=?').bind(id).run();
+    await logActivity(db, user.id, 'Suppression du courrier', 'courrier', id, before, null);
+    return sendJson(res, { ok: true });
+  }
+
+  res.setHeader('Allow', 'GET, POST, PUT, PATCH, DELETE');
+  return sendError(res, 'Méthode non autorisée', 405);
+}
+
 export default async function handler(req, res) {
   const user = await getSessionUser(req);
   const slug = Array.isArray(req.query.slug) ? req.query.slug : (req.query.slug ? [req.query.slug] : []);
 
   if (req.query.resource === 'employes') return handleEmployes(req, res, user, slug);
   if (req.query.resource === 'taches') return handleTaches(req, res, user, slug);
+  if (req.query.resource === 'courriers') return handleCourriers(req, res, user, slug);
   return handleEntreprises(req, res, user, slug);
 }

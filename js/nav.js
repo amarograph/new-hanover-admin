@@ -10,7 +10,7 @@
       { href: '/comptabilite.html', label: 'Comptabilité', icon: '⚖', page: 'comptabilite', perm: ['accounting', 'view'] },
       { href: '/employes.html', label: 'Employés', icon: '☺', page: 'employes', perm: ['employes', 'view'] },
       { href: '/taches.html', label: 'Tâches', icon: '✓', page: 'taches', perm: ['taches', 'view'] },
-      { href: '/courriers.html', label: 'Courriers', icon: '✎', page: 'courriers' },
+      { href: '/courriers.html', label: 'Courriers', icon: '✎', page: 'courriers', perm: ['courriers', 'view'] },
       { href: '/armes.html', label: 'Registre des armes', icon: '⚔', page: 'armes' },
       { href: '/chevaux.html', label: 'Registre des chevaux', icon: '♞', page: 'chevaux' },
       { href: '/inventaire.html', label: 'Inventaire du coffre', icon: '⚿', page: 'inventaire' },

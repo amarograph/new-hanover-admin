@@ -2,6 +2,7 @@
   const NAV_SECTIONS = [
     { group: null, items: [
       { href: '/dashboard.html', label: 'Accueil', icon: '⌂', page: 'dashboard' },
+      { href: '/profil.html', label: 'Mon profil', icon: '☺', page: 'profil' },
       { href: '/decrets.html', label: 'Décrets', icon: '§', page: 'decrets', perm: ['decrees', 'view'] },
       { href: '/communiques.html', label: 'Communiqués', icon: '✉', page: 'communiques', perm: ['communiques', 'view'] },
       { href: '/agenda.html', label: 'Agenda', icon: '▤', page: 'agenda', perm: ['agenda', 'view'] },
@@ -51,6 +52,11 @@
       });
       html += '</nav></div>';
     });
+    if (hasPermission(user, 'admin', 'manage_users')) {
+      html += `<div class="nav-group" style="margin-top:auto; padding-top:1rem;">
+        <a href="/utilisateurs.html" class="btn btn-gold" style="display:block; margin:0 1rem; text-align:center; text-decoration:none;">⚙ Panel Admin</a>
+      </div>`;
+    }
     sidebar.innerHTML = html;
   }
 
@@ -67,6 +73,7 @@
         <div class="search-results" id="search-results"></div>
       </div>
       <div class="topbar-spacer"></div>
+      ${hasPermission(user, 'admin', 'manage_users') ? `<a href="/utilisateurs.html" class="btn btn-outline btn-sm no-print" style="text-decoration:none; margin-right:0.6rem;">⚙ Panel Admin</a>` : ''}
       <div class="user-chip">
         <span class="name">${NH.escapeHtml(displayName)}</span>
         <span class="muted">${NH.escapeHtml(user.role ? user.role.name : 'Sans rôle')}</span>

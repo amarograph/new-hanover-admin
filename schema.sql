@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS users (
   last_login TEXT,
   status TEXT NOT NULL DEFAULT 'pending',
   role_id INTEGER REFERENCES roles(id),
+  signature TEXT,
   created_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'),
   updated_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
 );
@@ -41,6 +42,13 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE TABLE IF NOT EXISTS counters (
   key TEXT PRIMARY KEY,
   value INTEGER NOT NULL DEFAULT 0
+);
+
+-- Réglages ponctuels de la plateforme (ex. signer_1_id / signer_2_id :
+-- les deux personnes dont la signature apparaît sur tous les documents officiels).
+CREATE TABLE IF NOT EXISTS app_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT
 );
 
 CREATE TABLE IF NOT EXISTS decrees (
@@ -136,20 +144,16 @@ CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 -- Rôles par défaut. Modules : decrees, communiques, agenda, accounting, admin.
 -- Actions possibles : view, add, edit, archive, delete, validate, refuse, download, manage_users, view_log.
 INSERT INTO roles (name, description, permissions, is_system) VALUES
-('Administrateur principal', 'Accès complet à toutes les fonctionnalités du site.',
+('Admin dev', 'Accès complet à toutes les fonctionnalités du site (compte technique).',
  '{"all":["view","add","edit","archive","delete","validate","refuse","download","manage_users","view_log"]}', 1),
-('Gouverneur', 'Direction de l''administration, validation et publication.',
- '{"decrees":["view","add","edit","archive","validate","download"],"communiques":["view","add","edit","archive","validate","download"],"agenda":["view","add","edit","archive","download"],"accounting":["view","add","edit","validate","download"],"admin":["manage_users","view_log"]}', 1),
-('Gouverneur adjoint', 'Seconde le gouverneur dans ses fonctions.',
- '{"decrees":["view","add","edit","validate","download"],"communiques":["view","add","edit","validate","download"],"agenda":["view","add","edit","download"],"accounting":["view","add","download"],"admin":["view_log"]}', 1),
-('Secrétaire général', 'Rédaction et suivi des décrets, communiqués et de l''agenda.',
+('Administratrice', 'Accès complet à toutes les fonctionnalités du site.',
+ '{"all":["view","add","edit","archive","delete","validate","refuse","download","manage_users","view_log"]}', 1),
+('Adjoint', 'Seconde la direction de l''administration, validation et publication.',
+ '{"decrees":["view","add","edit","archive","delete","validate","download"],"communiques":["view","add","edit","archive","delete","validate","download"],"agenda":["view","add","edit","archive","delete","download"],"accounting":["view","add","edit","delete","validate","download"],"admin":["manage_users","view_log"]}', 1),
+('Secrétaire', 'Rédaction et suivi des décrets, communiqués et de l''agenda.',
  '{"decrees":["view","add","edit","download"],"communiques":["view","add","edit","download"],"agenda":["view","add","edit","download"],"accounting":["view"]}', 1),
-('Responsable administratif', 'Gestion courante de l''agenda et des communiqués.',
- '{"decrees":["view","download"],"communiques":["view","add","edit","download"],"agenda":["view","add","edit","download"],"accounting":["view"]}', 1),
-('Responsable financier', 'Gestion de la comptabilité de l''administration.',
- '{"decrees":["view"],"communiques":["view"],"agenda":["view"],"accounting":["view","add","edit","validate","download"]}', 1),
-('Employé administratif', 'Contribution courante sans droits de validation.',
+('Assistante', 'Contribution courante sans droits de validation.',
  '{"decrees":["view"],"communiques":["view","add","download"],"agenda":["view","add","download"],"accounting":["view"]}', 1),
-('Consultation uniquement', 'Accès en lecture seule à l''ensemble des modules.',
- '{"decrees":["view"],"communiques":["view"],"agenda":["view"],"accounting":["view"]}', 1)
+('Sécurité', 'Suivi des décrets et de l''agenda pour les besoins de la sécurité publique.',
+ '{"decrees":["view","download"],"communiques":["view"],"agenda":["view","add","edit","download"]}', 1)
 ON CONFLICT (name) DO NOTHING;

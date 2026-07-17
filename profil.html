@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mon profil — Administration de New Hanover</title>
+<link rel="stylesheet" href="/css/theme.css">
+</head>
+<body data-page="profil">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <div class="content" id="content">
+      <h1>Mon profil</h1>
+
+      <div class="sheet" style="max-width:520px;">
+        <div class="muted" id="profile-discord-info" style="margin-bottom:0.8rem;"></div>
+        <form id="profile-form">
+          <div class="field-row">
+            <div class="field"><label>Prénom RP</label><input type="text" id="f-first-name"></div>
+            <div class="field"><label>Nom RP</label><input type="text" id="f-last-name"></div>
+          </div>
+          <div class="field">
+            <label>Signature (image PNG)</label>
+            <div id="signature-preview" style="margin-bottom:0.5rem;"></div>
+            <input type="file" id="signature-input" accept="image/png">
+          </div>
+          <div class="modal-actions">
+            <button type="submit" class="btn btn-gold">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/pages/profil.js"></script>
+</body>
+</html>

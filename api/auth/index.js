@@ -3,6 +3,19 @@ import { getSessionUser, getCookie, makeSessionCookie, clearSessionCookie, SESSI
 import { logActivity } from '../../lib/log.js';
 import { sendJson, sendError } from '../../lib/respond.js';
 
+const MAX_SIGNATURE_BYTES = 500 * 1024;
+
+function validateSignature(signature) {
+  if (signature === undefined || signature === null || signature === '') return null;
+  if (typeof signature !== 'string' || !/^data:image\/png;base64,/.test(signature)) {
+    throw new Error('La signature doit être une image PNG.');
+  }
+  if (signature.length > MAX_SIGNATURE_BYTES * 1.4) {
+    throw new Error('Signature trop volumineuse (500 Ko maximum).');
+  }
+  return signature;
+}
+
 async function login(req, res) {
   if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_REDIRECT_URI) {
     res.status(500).send('Discord OAuth n\'est pas configuré (DISCORD_CLIENT_ID / DISCORD_REDIRECT_URI manquants).');
@@ -71,7 +84,7 @@ async function callback(req, res) {
     let roleId = null;
     if (bootstrapIds.includes(discordId)) {
       const adminRole = await db.prepare(
-        "SELECT id FROM roles WHERE name = 'Administrateur principal'"
+        "SELECT id FROM roles WHERE name = 'Admin dev'"
       ).first();
       status = 'accepted';
       roleId = adminRole ? adminRole.id : null;
@@ -118,18 +131,36 @@ async function me(req, res) {
 
   const {
     id, discord_id, discord_username, character_first_name, character_last_name,
-    job_title, grade, arrival_date, last_login, status, role, permissions,
+    job_title, grade, arrival_date, last_login, status, role, permissions, signature,
   } = user;
 
   res.status(200).json({
     authenticated: true,
     user: {
       id, discord_id, discord_username, character_first_name, character_last_name,
-      job_title, grade, arrival_date, last_login, status,
+      job_title, grade, arrival_date, last_login, status, signature,
       role: role ? { id: role.id, name: role.name } : null,
       permissions,
     },
   });
+}
+
+async function updateProfile(req, res) {
+  const user = await getSessionUser(req);
+  if (!user) return sendError(res, 'Non authentifié', 401);
+
+  const body = req.body || {};
+  let signature;
+  try { signature = validateSignature(body.signature); } catch (e) { return sendError(res, e.message, 422); }
+  if (body.signature === undefined) signature = user.signature;
+
+  await db.prepare(
+    `UPDATE users SET character_first_name=?, character_last_name=?, signature=?, updated_at=${NOW_EXPR} WHERE id=?`
+  ).bind(
+    body.character_first_name || '', body.character_last_name || '', signature, user.id
+  ).run();
+
+  return sendJson(res, { ok: true });
 }
 
 export default async function handler(req, res) {
@@ -139,6 +170,7 @@ export default async function handler(req, res) {
   if (action === 'callback' && req.method === 'GET') return callback(req, res);
   if (action === 'logout' && req.method === 'POST') return logout(req, res);
   if (action === 'me' && req.method === 'GET') return me(req, res);
+  if (action === 'profile' && req.method === 'PATCH') return updateProfile(req, res);
 
   return sendError(res, 'Route inconnue', 404);
 }

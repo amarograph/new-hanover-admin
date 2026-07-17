@@ -6,21 +6,24 @@
 <title>Paramètres — Administration de New Hanover</title>
 <link rel="stylesheet" href="/css/theme.css">
 </head>
-<body data-page="parametres">
+<body data-page="parametres" data-require-permission="admin:manage_users">
 <div class="app-shell">
   <aside class="sidebar" id="sidebar"></aside>
   <div class="main">
     <header class="topbar" id="topbar"></header>
     <div class="content" id="content">
       <h1>Paramètres du site</h1>
-      <div class="sheet">
-        <span class="stamp stamp-gold" style="margin-bottom:0.8rem;">Module à venir</span>
-        <p>Configuration générale de la plateforme (réservé aux administrateurs).</p>
-        
-        <h3>Prévu pour ce module</h3>
-        <ul class="muted" style="line-height:1.9;">
-          <li>Personnalisation de l'apparence et des libellés</li><li>Gestion des catégories et listes déroulantes</li><li>Paramètres de notification</li>
-        </ul>
+
+      <div class="sheet" style="max-width:520px;">
+        <h3 style="margin-top:0;">Signataires officiels des documents</h3>
+        <p class="muted">Ces deux personnes signent tous les décrets et communiqués publiés (leur nom RP et leur signature doivent être renseignés dans leur profil).</p>
+        <form id="signers-form">
+          <div class="field"><label>Signataire 1</label><select id="f-signer-1"></select></div>
+          <div class="field"><label>Signataire 2</label><select id="f-signer-2"></select></div>
+          <div class="modal-actions">
+            <button type="submit" class="btn btn-gold">Enregistrer</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -28,5 +31,6 @@
 <script src="/js/api.js"></script>
 <script src="/js/utils.js"></script>
 <script src="/js/nav.js"></script>
+<script src="/js/pages/parametres.js"></script>
 </body>
 </html>

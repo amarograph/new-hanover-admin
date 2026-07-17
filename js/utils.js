@@ -159,3 +159,14 @@ NH.BL_STATUS_STAMP_CLASS = {
   doit_repondre: 'stamp-red',
   repondu: 'stamp-green',
 };
+
+NH.ARME_CATEGORY_LABELS = {
+  legale: 'Légale',
+  illegale: 'Illégale',
+  non_connu: 'Non connu',
+};
+NH.ARME_CATEGORY_STAMP_CLASS = {
+  legale: 'stamp-green',
+  illegale: 'stamp-red',
+  non_connu: 'stamp-grey',
+};

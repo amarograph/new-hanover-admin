@@ -568,5 +568,115 @@ export default async function handler(req, res) {
   if (req.query.resource === 'taches') return handleTaches(req, res, user, slug);
   if (req.query.resource === 'courriers') return handleCourriers(req, res, user, slug);
   if (req.query.resource === 'boite_lettres') return handleBoiteLettres(req, res, user, slug);
+  if (req.query.resource === 'armes') return handleArmes(req, res, user, slug);
   return handleEntreprises(req, res, user, slug);
+}
+
+// ---------------------------------------------------------------------------
+// Registre des armes : fiches légales/illégales/non connu, avec surbrillance
+// des armes volées (?resource=armes).
+// ---------------------------------------------------------------------------
+
+const ARME_SELECT = `SELECT a.*, au.discord_username as author_name
+  FROM armes a
+  LEFT JOIN users au ON au.id = a.author_id`;
+
+const ARME_CATEGORIES = ['legale', 'illegale', 'non_connu'];
+
+async function getArme(id) {
+  return db.prepare(ARME_SELECT + ' WHERE a.id = ?').bind(id).first();
+}
+
+async function listArmes(req, res, user) {
+  if (!hasPermission(user, 'armes', 'view')) return sendError(res, 'Accès refusé', 403);
+
+  const { category, q } = req.query;
+  let query = ARME_SELECT + ' WHERE 1=1';
+  const binds = [];
+  if (category) { query += ' AND a.category = ?'; binds.push(category); }
+  if (q) {
+    query += ' AND (a.type LIKE ? OR a.model LIKE ? OR a.serial_number LIKE ? OR a.number LIKE ? OR a.owner_last_name LIKE ?)';
+    binds.push(`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`);
+  }
+  query += ' ORDER BY a.created_at DESC';
+
+  const { results } = await db.prepare(query).bind(...binds).all();
+  return sendJson(res, { armes: results });
+}
+
+function readArmeBody(body) {
+  return {
+    type: body.type || '',
+    model: body.model || '',
+    serial_number: body.serial_number || '',
+    owner_first_name: body.owner_first_name || '',
+    owner_last_name: body.owner_last_name || '',
+    category: ARME_CATEGORIES.includes(body.category) ? body.category : 'non_connu',
+    stolen: body.stolen ? 1 : 0,
+    notes: body.notes || '',
+  };
+}
+
+async function createArme(req, res, user) {
+  if (!hasPermission(user, 'armes', 'add')) return sendError(res, 'Accès refusé', 403);
+
+  const body = req.body || {};
+  const f = readArmeBody(body);
+
+  const number = await nextNumber(db, 'ARM-NH');
+  const result = await db.prepare(
+    `INSERT INTO armes (number, type, model, serial_number, owner_first_name, owner_last_name, category, stolen, notes, author_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+  ).bind(number, f.type, f.model, f.serial_number, f.owner_first_name, f.owner_last_name, f.category, f.stolen, f.notes, user.id).run();
+
+  const id = result.meta.last_row_id;
+  await logActivity(db, user.id, 'Enregistrement d\'une arme', 'arme', id, null, { number, type: f.type });
+  return sendJson(res, { id, number }, 201);
+}
+
+async function handleArmes(req, res, user, slug) {
+  if (slug.length === 0) {
+    if (req.method === 'GET') return listArmes(req, res, user);
+    if (req.method === 'POST') return createArme(req, res, user);
+    res.setHeader('Allow', 'GET, POST');
+    return sendError(res, 'Méthode non autorisée', 405);
+  }
+
+  const id = slug[0];
+
+  if (req.method === 'GET') {
+    if (!hasPermission(user, 'armes', 'view')) return sendError(res, 'Accès refusé', 403);
+    const arme = await getArme(id);
+    if (!arme) return sendError(res, 'Arme introuvable', 404);
+    return sendJson(res, { arme });
+  }
+
+  if (req.method === 'PUT') {
+    if (!hasPermission(user, 'armes', 'edit')) return sendError(res, 'Accès refusé', 403);
+    const before = await getArme(id);
+    if (!before) return sendError(res, 'Arme introuvable', 404);
+
+    const body = req.body || {};
+    const f = readArmeBody(body);
+
+    await db.prepare(
+      `UPDATE armes SET type=?, model=?, serial_number=?, owner_first_name=?, owner_last_name=?, category=?, stolen=?, notes=?, updated_at=${NOW_EXPR} WHERE id=?`
+    ).bind(f.type, f.model, f.serial_number, f.owner_first_name, f.owner_last_name, f.category, f.stolen, f.notes, id).run();
+
+    await logActivity(db, user.id, 'Modification de la fiche arme', 'arme', id, before, body);
+    return sendJson(res, { ok: true });
+  }
+
+  if (req.method === 'DELETE') {
+    if (!hasPermission(user, 'armes', 'delete')) return sendError(res, 'Accès refusé', 403);
+    const before = await getArme(id);
+    if (!before) return sendError(res, 'Arme introuvable', 404);
+
+    await db.prepare('DELETE FROM armes WHERE id=?').bind(id).run();
+    await logActivity(db, user.id, 'Suppression de la fiche arme', 'arme', id, before, null);
+    return sendJson(res, { ok: true });
+  }
+
+  res.setHeader('Allow', 'GET, POST, PUT, DELETE');
+  return sendError(res, 'Méthode non autorisée', 405);
 }

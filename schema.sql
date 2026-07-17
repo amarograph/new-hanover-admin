@@ -172,6 +172,23 @@ CREATE TABLE IF NOT EXISTS boite_lettres (
 );
 CREATE INDEX IF NOT EXISTS idx_boite_lettres_status ON boite_lettres(status);
 
+CREATE TABLE IF NOT EXISTS armes (
+  id SERIAL PRIMARY KEY,
+  number TEXT UNIQUE,
+  type TEXT,
+  model TEXT,
+  serial_number TEXT,
+  owner_first_name TEXT,
+  owner_last_name TEXT,
+  category TEXT NOT NULL DEFAULT 'legale',
+  stolen INTEGER NOT NULL DEFAULT 0,
+  notes TEXT,
+  author_id INTEGER REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'),
+  updated_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
+);
+CREATE INDEX IF NOT EXISTS idx_armes_category ON armes(category);
+
 CREATE TABLE IF NOT EXISTS transactions (
   id SERIAL PRIMARY KEY,
   number TEXT UNIQUE,

@@ -6,28 +6,91 @@
 <title>Registre des armes — Administration de New Hanover</title>
 <link rel="icon" type="image/png" href="/css/img/favicon.png">
 <link rel="stylesheet" href="/css/theme.css">
+<style>
+  tr.stolen td { color: var(--bordeaux-bright); font-weight: 600; }
+</style>
 </head>
-<body data-page="armes">
+<body data-page="armes" data-require-permission="armes:view">
 <div class="app-shell">
   <aside class="sidebar" id="sidebar"></aside>
   <div class="main">
     <header class="topbar" id="topbar"></header>
     <div class="content" id="content">
-      <h1>Registre des armes</h1>
+      <div class="flex-between">
+        <h1>Registre des armes</h1>
+        <button class="btn btn-gold" id="btn-new">+ Enregistrer une arme</button>
+      </div>
+
+      <div class="tabs" id="category-tabs"></div>
+
+      <div class="sheet" style="display:flex; gap:0.8rem; align-items:flex-end;">
+        <div class="field" style="margin:0; flex:1;">
+          <label>Rechercher par type, modèle, n° de série ou propriétaire</label>
+          <input type="search" id="filter-q" placeholder="ARM-NH-001 ou mot-clé...">
+        </div>
+      </div>
+
       <div class="sheet">
-        <span class="stamp stamp-gold" style="margin-bottom:0.8rem;">Module à venir</span>
-        <p>Enregistrement des armes déclarées ou autorisées sur le territoire de New Hanover.</p>
-        <p class="muted">Format de numérotation prévu : <code>ARM-NH-001</code></p>
-        <h3>Prévu pour ce module</h3>
-        <ul class="muted" style="line-height:1.9;">
-          <li>Type, modèle, numéro de série, propriétaire, autorisation associée</li><li>Statuts : enregistrée, autorisée, autorisation expirée, volée, perdue, saisie, détruite, archivée</li><li>Historique des changements de propriétaire, saisies, pertes et renouvellements</li>
-        </ul>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Numéro</th><th>Type</th><th>Modèle</th><th>N° de série</th><th>Propriétaire</th><th>Catégorie</th></tr></thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+        <div id="table-empty" class="empty-state" style="display:none;">Aucune arme enregistrée dans cette catégorie.</div>
       </div>
     </div>
   </div>
 </div>
+
+<div class="modal-backdrop" id="item-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Nouvelle arme</h2>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <form id="item-form">
+      <input type="hidden" id="f-id">
+      <div class="field-row">
+        <div class="field"><label>Type</label><input type="text" id="f-type" placeholder="Revolver, fusil, couteau..."></div>
+        <div class="field"><label>Modèle</label><input type="text" id="f-model"></div>
+      </div>
+      <div class="field"><label>Numéro de série</label><input type="text" id="f-serial"></div>
+      <div class="field-row">
+        <div class="field"><label>Prénom du propriétaire</label><input type="text" id="f-owner-first"></div>
+        <div class="field"><label>Nom du propriétaire</label><input type="text" id="f-owner-last"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Catégorie</label>
+          <select id="f-category">
+            <option value="legale">Légale</option>
+            <option value="illegale">Illégale</option>
+            <option value="non_connu">Non connu (arme trouvée non recensée)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Statut</label>
+          <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.95rem; text-transform:none; letter-spacing:normal; margin-top:0.4rem;">
+            <input type="checkbox" id="f-stolen" style="width:auto;"> Déclarée volée
+          </label>
+        </div>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="f-notes" style="min-height:60px;"></textarea></div>
+
+      <div id="item-meta" class="muted" style="margin-bottom:0.6rem;"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-danger" id="btn-delete" style="margin-right:auto; display:none;">Supprimer</button>
+        <button type="button" class="btn btn-outline" id="modal-cancel">Annuler</button>
+        <button type="submit" class="btn btn-gold" id="save-btn">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script src="/js/api.js"></script>
 <script src="/js/utils.js"></script>
 <script src="/js/nav.js"></script>
+<script src="/js/pages/armes.js"></script>
 </body>
 </html>

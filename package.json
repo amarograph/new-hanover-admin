@@ -2,14 +2,17 @@
   "name": "new-hanover-admin",
   "private": true,
   "version": "1.0.0",
-  "description": "Administration de New Hanover — plateforme interne (Cloudflare Pages + D1).",
+  "type": "module",
+  "description": "Administration de New Hanover — plateforme interne (Vercel + Postgres).",
   "scripts": {
-    "dev": "wrangler pages dev public --d1=DB=new-hanover-admin-db --local",
-    "deploy": "wrangler pages deploy public --project-name=new-hanover-admin",
-    "db:migrate:local": "wrangler d1 execute new-hanover-admin-db --local --file=./schema.sql",
-    "db:migrate:remote": "wrangler d1 execute new-hanover-admin-db --remote --file=./schema.sql"
+    "dev": "vercel dev",
+    "deploy": "vercel --prod",
+    "db:migrate": "psql \"$POSTGRES_URL\" -f ./schema.sql"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
   },
   "devDependencies": {
-    "wrangler": "^3.78.0"
+    "vercel": "^37.0.0"
   }
 }

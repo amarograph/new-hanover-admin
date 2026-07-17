@@ -375,6 +375,16 @@ tbody tr:hover { background: rgba(184,134,44,0.08); }
 }
 .toast.error { border-color: var(--bordeaux); }
 
+.mailbox-banner {
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+  color: var(--wood-dark);
+  text-align: center;
+  padding: 0.55rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.mailbox-banner a { color: var(--wood-dark); text-decoration: underline; margin-left: 0.4em; }
+
 .empty-state { text-align: center; padding: 3rem 1rem; color: var(--ink-soft); font-style: italic; }
 .muted { color: var(--ink-soft); font-size: 0.85rem; }
 .text-right { text-align: right; }

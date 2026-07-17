@@ -148,3 +148,14 @@ NH.ENTREPRISE_STATUS_STAMP_CLASS = {
   fermee: 'stamp-grey',
   archivee: 'stamp-grey',
 };
+
+NH.BL_STATUS_LABELS = {
+  a_repondre: 'À répondre',
+  doit_repondre: 'Doit répondre',
+  repondu: 'Répondu',
+};
+NH.BL_STATUS_STAMP_CLASS = {
+  a_repondre: 'stamp-gold',
+  doit_repondre: 'stamp-red',
+  repondu: 'stamp-green',
+};

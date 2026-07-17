@@ -160,6 +160,18 @@ CREATE TABLE IF NOT EXISTS courriers (
   updated_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
 );
 
+CREATE TABLE IF NOT EXISTS boite_lettres (
+  id SERIAL PRIMARY KEY,
+  description TEXT,
+  image TEXT,
+  status TEXT NOT NULL DEFAULT 'a_repondre',
+  assigned_user_id INTEGER REFERENCES users(id),
+  author_id INTEGER REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'),
+  updated_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
+);
+CREATE INDEX IF NOT EXISTS idx_boite_lettres_status ON boite_lettres(status);
+
 CREATE TABLE IF NOT EXISTS transactions (
   id SERIAL PRIMARY KEY,
   number TEXT UNIQUE,

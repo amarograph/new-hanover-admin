@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boîte aux lettres — Administration de New Hanover</title>
+<link rel="icon" type="image/png" href="/css/img/favicon.png">
+<link rel="stylesheet" href="/css/theme.css">
+</head>
+<body data-page="boite-lettres" data-require-permission="boite_lettres:view">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <div class="content" id="content">
+      <div class="flex-between">
+        <h1>Boîte aux lettres</h1>
+        <button class="btn btn-gold" id="btn-new">+ Déposer un courrier</button>
+      </div>
+
+      <div class="tabs" id="status-tabs"></div>
+
+      <div class="sheet">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Description</th><th>Déposé le</th><th>Statut</th><th>Assigné à</th></tr></thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+        <div id="table-empty" class="empty-state" style="display:none;">Aucun courrier dans la boîte aux lettres.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="item-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Nouveau courrier</h2>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <form id="item-form">
+      <input type="hidden" id="f-id">
+      <div class="field">
+        <label>Image du courrier</label>
+        <div id="image-preview" style="margin-bottom:0.5rem;"></div>
+        <input type="file" id="image-input" accept="image/png,image/jpeg,image/gif,image/webp">
+      </div>
+      <div class="field"><label>Description</label><input type="text" id="f-description" placeholder="Ex : lettre de plainte de M. Untel"></div>
+
+      <div class="field">
+        <label>Statut</label>
+        <select id="f-status">
+          <option value="a_repondre">À répondre</option>
+          <option value="doit_repondre">Doit répondre</option>
+          <option value="repondu">Répondu</option>
+        </select>
+      </div>
+      <div class="field" id="assigned-field" style="display:none;">
+        <label>Personne devant répondre</label>
+        <select id="f-assigned"></select>
+      </div>
+
+      <div id="item-meta" class="muted" style="margin-bottom:0.6rem;"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-danger" id="btn-delete" style="margin-right:auto; display:none;">Supprimer</button>
+        <button type="button" class="btn btn-outline" id="modal-cancel">Annuler</button>
+        <button type="submit" class="btn btn-gold" id="save-btn">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/pages/boite-lettres.js"></script>
+</body>
+</html>

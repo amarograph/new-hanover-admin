@@ -11,6 +11,7 @@
       { href: '/employes.html', label: 'Employés', icon: '☺', page: 'employes', perm: ['employes', 'view'] },
       { href: '/taches.html', label: 'Tâches', icon: '✓', page: 'taches', perm: ['taches', 'view'] },
       { href: '/courriers.html', label: 'Courriers', icon: '✎', page: 'courriers', perm: ['courriers', 'view'] },
+      { href: '/boite-lettres.html', label: 'Boîte aux lettres', icon: '✉', page: 'boite-lettres', perm: ['boite_lettres', 'view'] },
       { href: '/armes.html', label: 'Registre des armes', icon: '⚔', page: 'armes' },
       { href: '/chevaux.html', label: 'Registre des chevaux', icon: '♞', page: 'chevaux' },
       { href: '/inventaire.html', label: 'Inventaire du coffre', icon: '⚿', page: 'inventaire' },
@@ -157,9 +158,22 @@
 
     renderSidebar(data.user, currentPage);
     renderTopbar(data.user);
+    renderMailboxBanner();
 
     window.NH.currentUser = data.user;
     document.dispatchEvent(new CustomEvent('nh:ready', { detail: data.user }));
+  }
+
+  async function renderMailboxBanner() {
+    let data;
+    try { data = await NH.get('/api/boite-lettres?my_pending=1'); } catch (e) { return; }
+    if (!data.boite_lettres || !data.boite_lettres.length) return;
+
+    const banner = document.createElement('div');
+    banner.className = 'mailbox-banner no-print';
+    const n = data.boite_lettres.length;
+    banner.innerHTML = `✉ Vous êtes cité(e) dans ${n} courrier${n > 1 ? 's' : ''} de la boîte aux lettres à traiter. <a href="/boite-lettres.html">Voir</a>`;
+    document.body.prepend(banner);
   }
 
   document.addEventListener('DOMContentLoaded', initGate);

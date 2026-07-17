@@ -7,6 +7,7 @@ document.addEventListener('nh:ready', async (evt) => {
     { label: 'Créer un événement d\'agenda', href: '/agenda.html?new=1', perm: ['agenda', 'add'] },
     { label: 'Ajouter une transaction', href: '/comptabilite.html?new=1', perm: ['accounting', 'add'] },
     { label: 'Enregistrer un courrier', href: '/courriers.html' },
+    { label: 'Déposer un courrier (boîte aux lettres)', href: '/boite-lettres.html?new=1', perm: ['boite_lettres', 'add'] },
     { label: 'Créer une tâche', href: '/taches.html' },
     { label: 'Ajouter une entreprise', href: '/entreprises.html' },
     { label: 'Modifier l\'inventaire du coffre', href: '/inventaire.html' },
@@ -28,7 +29,8 @@ document.addEventListener('nh:ready', async (evt) => {
   if (data.decrees_en_preparation !== null) tiles.push(['Décrets en préparation', data.decrees_en_preparation]);
   if (data.decrees_a_publier !== null) tiles.push(['Décrets à publier', data.decrees_a_publier]);
   if (data.communiques_en_attente !== null) tiles.push(['Communiqués en attente', data.communiques_en_attente]);
-  tiles.push(['Courriers en attente', '—', 'Module à venir']);
+  if (data.mail_en_attente !== null) tiles.push(['Boîte aux lettres à répondre', data.mail_en_attente]);
+  else tiles.push(['Courriers en attente', '—', 'Module à venir']);
   tiles.push(['Tâches en cours', '—', 'Module à venir']);
   document.getElementById('stat-tiles').innerHTML = tiles.map(([label, value, note]) => `
     <div class="stat-tile">
@@ -67,4 +69,12 @@ document.addEventListener('nh:ready', async (evt) => {
     recentTx.innerHTML = '<p class="muted">Vous n\'avez pas accès à la comptabilité.</p>';
   }
 
+  if (data.boite_lettres_a_repondre && data.boite_lettres_a_repondre.length) {
+    document.getElementById('mailbox-sheet').style.display = '';
+    document.getElementById('mailbox-pending').innerHTML = '<ul class="tache-list" style="list-style:none; margin:0; padding:0;">' + data.boite_lettres_a_repondre.map((b) => `
+      <li style="padding:0.5rem 0; border-bottom:1px solid var(--paper-line);">
+        <a href="/boite-lettres.html?id=${b.id}">${NH.escapeHtml(b.description || 'Courrier sans description')}</a>
+        <span class="muted" style="float:right;">${NH.formatDate(b.created_at)}</span>
+      </li>`).join('') + '</ul>';
+  }
 });

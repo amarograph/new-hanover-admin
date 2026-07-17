@@ -7,6 +7,7 @@ const MODULES = [
   { key: 'employes', label: 'Employés', actions: ['view', 'add', 'edit', 'delete'] },
   { key: 'taches', label: 'Tâches', actions: ['view', 'add', 'edit', 'delete'] },
   { key: 'courriers', label: 'Courriers', actions: ['view', 'add', 'edit', 'delete'] },
+  { key: 'boite_lettres', label: 'Boîte aux lettres', actions: ['view', 'add', 'edit', 'delete'] },
   { key: 'admin', label: 'Administration du site', actions: ['manage_users', 'view_log'] },
 ];
 const ACTION_LABELS = {

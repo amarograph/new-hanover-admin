@@ -12,6 +12,8 @@
     { "source": "/api/taches/:id", "destination": "/api/entreprises?resource=taches&slug=:id" },
     { "source": "/api/courriers", "destination": "/api/entreprises?resource=courriers" },
     { "source": "/api/courriers/:id", "destination": "/api/entreprises?resource=courriers&slug=:id" },
+    { "source": "/api/boite-lettres", "destination": "/api/entreprises?resource=boite_lettres" },
+    { "source": "/api/boite-lettres/:id", "destination": "/api/entreprises?resource=boite_lettres&slug=:id" },
     { "source": "/api/roles/:id", "destination": "/api/roles?slug=:id" },
     { "source": "/api/users/:id", "destination": "/api/users?slug=:id" }
   ]

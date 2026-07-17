@@ -406,6 +406,160 @@ async function handleCourriers(req, res, user, slug) {
   return sendError(res, 'Méthode non autorisée', 405);
 }
 
+// ---------------------------------------------------------------------------
+// Boîte aux lettres : dépôt d'images de courriers reçus, avec statut et
+// assignation d'une personne devant répondre (?resource=boite_lettres).
+// ---------------------------------------------------------------------------
+
+const BL_SELECT = `SELECT b.*, au.discord_username as author_name,
+    asu.character_first_name as assigned_first_name, asu.character_last_name as assigned_last_name
+  FROM boite_lettres b
+  LEFT JOIN users au ON au.id = b.author_id
+  LEFT JOIN users asu ON asu.id = b.assigned_user_id`;
+
+// La liste omet l'image (potentiellement volumineuse en base64) pour ne pas
+// alourdir la réponse ; seule la fiche détail la renvoie.
+const BL_SELECT_LIST = BL_SELECT.replace('b.*', `b.id, b.description, b.status, b.assigned_user_id, b.author_id, b.created_at, b.updated_at`);
+
+const BL_STATUSES = ['a_repondre', 'doit_repondre', 'repondu'];
+const MAX_BL_IMAGE_BYTES = 2 * 1024 * 1024;
+
+function validateBLImage(image) {
+  if (image === undefined || image === null || image === '') return null;
+  if (typeof image !== 'string' || !/^data:image\/(png|jpeg|jpg|gif|webp);base64,/.test(image)) {
+    throw new Error('Format d\'image invalide.');
+  }
+  if (image.length > MAX_BL_IMAGE_BYTES * 1.4) {
+    throw new Error('Image trop volumineuse (2 Mo maximum).');
+  }
+  return image;
+}
+
+async function getBoiteLettre(id) {
+  return db.prepare(BL_SELECT + ' WHERE b.id = ?').bind(id).first();
+}
+
+async function listBoiteLettres(req, res, user) {
+  // Utilisé par la notification globale (nav.js) : toute personne connectée
+  // peut vérifier si elle est elle-même citée, même sans permission "view".
+  if (req.query.my_pending === '1') {
+    if (!user) return sendError(res, 'Non authentifié', 401);
+    const { results } = await db.prepare(
+      "SELECT id FROM boite_lettres WHERE assigned_user_id = ? AND status = 'doit_repondre'"
+    ).bind(user.id).all();
+    return sendJson(res, { boite_lettres: results });
+  }
+
+  // Liste des personnes assignables, pour le menu déroulant "Doit répondre".
+  if (req.query.assignable_users === '1') {
+    if (!hasPermission(user, 'boite_lettres', 'edit')) return sendError(res, 'Accès refusé', 403);
+    const { results } = await db.prepare(
+      "SELECT id, character_first_name, character_last_name, discord_username FROM users WHERE status='accepted' ORDER BY character_last_name ASC, character_first_name ASC"
+    ).all();
+    return sendJson(res, { users: results });
+  }
+
+  if (!hasPermission(user, 'boite_lettres', 'view')) return sendError(res, 'Accès refusé', 403);
+
+  const { status, q } = req.query;
+  let query = BL_SELECT_LIST + ' WHERE 1=1';
+  const binds = [];
+  if (status) { query += ' AND b.status = ?'; binds.push(status); }
+  if (q) { query += ' AND b.description LIKE ?'; binds.push(`%${q}%`); }
+  query += ' ORDER BY b.created_at DESC';
+
+  const { results } = await db.prepare(query).bind(...binds).all();
+  return sendJson(res, { boite_lettres: results });
+}
+
+async function createBoiteLettre(req, res, user) {
+  if (!hasPermission(user, 'boite_lettres', 'add')) return sendError(res, 'Accès refusé', 403);
+
+  const body = req.body || {};
+  let image;
+  try { image = validateBLImage(body.image); } catch (e) { return sendError(res, e.message, 422); }
+
+  const result = await db.prepare(
+    `INSERT INTO boite_lettres (description, image, author_id) VALUES (?, ?, ?) RETURNING id`
+  ).bind(body.description || '', image, user.id).run();
+
+  const id = result.meta.last_row_id;
+  await logActivity(db, user.id, 'Dépôt d\'un courrier en boîte aux lettres', 'boite_lettre', id, null, null);
+  return sendJson(res, { id }, 201);
+}
+
+async function handleBoiteLettres(req, res, user, slug) {
+  if (slug.length === 0) {
+    if (req.method === 'GET') return listBoiteLettres(req, res, user);
+    if (req.method === 'POST') return createBoiteLettre(req, res, user);
+    res.setHeader('Allow', 'GET, POST');
+    return sendError(res, 'Méthode non autorisée', 405);
+  }
+
+  const id = slug[0];
+
+  if (req.method === 'GET') {
+    if (!hasPermission(user, 'boite_lettres', 'view')) return sendError(res, 'Accès refusé', 403);
+    const item = await getBoiteLettre(id);
+    if (!item) return sendError(res, 'Courrier introuvable', 404);
+    return sendJson(res, { boite_lettre: item });
+  }
+
+  if (req.method === 'PUT') {
+    if (!hasPermission(user, 'boite_lettres', 'edit')) return sendError(res, 'Accès refusé', 403);
+    const before = await getBoiteLettre(id);
+    if (!before) return sendError(res, 'Courrier introuvable', 404);
+
+    const body = req.body || {};
+    let image;
+    try { image = validateBLImage(body.image); } catch (e) { return sendError(res, e.message, 422); }
+    if (body.image === undefined) image = before.image;
+
+    await db.prepare(
+      `UPDATE boite_lettres SET description=?, image=?, updated_at=${NOW_EXPR} WHERE id=?`
+    ).bind(body.description || '', image, id).run();
+    return sendJson(res, { ok: true });
+  }
+
+  if (req.method === 'PATCH') {
+    if (!hasPermission(user, 'boite_lettres', 'edit')) return sendError(res, 'Accès refusé', 403);
+    const before = await getBoiteLettre(id);
+    if (!before) return sendError(res, 'Courrier introuvable', 404);
+
+    const body = req.body || {};
+    if (!body.status || !BL_STATUSES.includes(body.status)) return sendError(res, 'Statut invalide', 422);
+
+    let assignedUserId = null;
+    if (body.status === 'doit_repondre') {
+      if (!body.assigned_user_id) return sendError(res, 'Une personne doit être désignée', 422);
+      const exists = await db.prepare('SELECT id FROM users WHERE id = ?').bind(body.assigned_user_id).first();
+      if (!exists) return sendError(res, 'Utilisateur introuvable', 422);
+      assignedUserId = body.assigned_user_id;
+    }
+
+    await db.prepare(
+      `UPDATE boite_lettres SET status=?, assigned_user_id=?, updated_at=${NOW_EXPR} WHERE id=?`
+    ).bind(body.status, assignedUserId, id).run();
+
+    await logActivity(db, user.id, `Changement de statut du courrier de la boîte aux lettres (${before.status} -> ${body.status})`, 'boite_lettre', id, { status: before.status }, { status: body.status });
+    return sendJson(res, { ok: true });
+  }
+
+  if (req.method === 'DELETE') {
+    if (!hasPermission(user, 'boite_lettres', 'delete')) return sendError(res, 'Accès refusé', 403);
+    const before = await getBoiteLettre(id);
+    if (!before) return sendError(res, 'Courrier introuvable', 404);
+
+    await db.prepare('DELETE FROM boite_lettres WHERE id=?').bind(id).run();
+    const { image: deletedImage, ...beforeLog } = before;
+    await logActivity(db, user.id, 'Suppression du courrier de la boîte aux lettres', 'boite_lettre', id, beforeLog, null);
+    return sendJson(res, { ok: true });
+  }
+
+  res.setHeader('Allow', 'GET, POST, PUT, PATCH, DELETE');
+  return sendError(res, 'Méthode non autorisée', 405);
+}
+
 export default async function handler(req, res) {
   const user = await getSessionUser(req);
   const slug = Array.isArray(req.query.slug) ? req.query.slug : (req.query.slug ? [req.query.slug] : []);
@@ -413,5 +567,6 @@ export default async function handler(req, res) {
   if (req.query.resource === 'employes') return handleEmployes(req, res, user, slug);
   if (req.query.resource === 'taches') return handleTaches(req, res, user, slug);
   if (req.query.resource === 'courriers') return handleCourriers(req, res, user, slug);
+  if (req.query.resource === 'boite_lettres') return handleBoiteLettres(req, res, user, slug);
   return handleEntreprises(req, res, user, slug);
 }

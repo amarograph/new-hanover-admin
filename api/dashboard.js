@@ -14,10 +14,11 @@ export default async function handler(req, res) {
   const canCommuniques = hasPermission(user, 'communiques', 'view');
   const canAgenda = hasPermission(user, 'agenda', 'view');
   const canAccounting = hasPermission(user, 'accounting', 'view');
+  const canBoiteLettres = hasPermission(user, 'boite_lettres', 'view');
 
   const [
     decreesEnPreparation, decreesAPublier, communiquesEnAttente,
-    upcomingEvents, accountingTotals, recentIn, recentOut,
+    upcomingEvents, accountingTotals, recentIn, recentOut, boiteLettresARepondre,
   ] = await Promise.all([
     canDecrees
       ? db.prepare("SELECT COUNT(*)::int as c FROM decrees WHERE category IN ('a_faire','en_redaction')").first()
@@ -40,13 +41,17 @@ export default async function handler(req, res) {
     canAccounting
       ? db.prepare("SELECT * FROM transactions WHERE type='sortie' ORDER BY date DESC, created_at DESC LIMIT 5").all()
       : { results: [] },
+    canBoiteLettres
+      ? db.prepare("SELECT id, description, created_at FROM boite_lettres WHERE status = 'a_repondre' ORDER BY created_at ASC LIMIT 5").all()
+      : { results: [] },
   ]);
 
   return sendJson(res, {
     decrees_en_preparation: decreesEnPreparation.c,
     decrees_a_publier: decreesAPublier.c,
     communiques_en_attente: communiquesEnAttente.c,
-    mail_en_attente: null,
+    mail_en_attente: canBoiteLettres ? boiteLettresARepondre.results.length : null,
+    boite_lettres_a_repondre: boiteLettresARepondre.results,
     tasks_en_cours: null,
     upcoming_events: upcomingEvents.results,
     balance: canAccounting ? (accountingTotals.total_in - accountingTotals.total_out) : null,

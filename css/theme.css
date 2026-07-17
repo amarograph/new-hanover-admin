@@ -1,15 +1,15 @@
 /* ===========================================================
    Administration de New Hanover — thème "1892"
-   Bois sombre, cuir, papier ancien, dorures discrètes.
+   Bleu marine et dorures du blason, papier ancien.
    =========================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 
 :root {
-  --wood-dark: #241611;
-  --wood: #35221a;
-  --wood-light: #4a2f23;
-  --leather: #5a3624;
+  --wood-dark: #0d1a2b;
+  --wood: #142a42;
+  --wood-light: #1c3a5a;
+  --leather: #24455f;
   --gold: #b8862c;
   --gold-bright: #d8a94a;
   --paper: #f3e8cf;
@@ -38,7 +38,7 @@
 :root[data-theme="nuit"] .sheet,
 :root[data-theme="nuit"] .card,
 :root[data-theme="nuit"] table {
-  background: #221913;
+  background: #142236;
   color: var(--ink);
 }
 
@@ -102,6 +102,7 @@ a { color: var(--bordeaux); }
   text-decoration: none;
 }
 .sidebar .brand small { display: block; font-family: var(--font-body); font-style: italic; color: #cbb98a; font-size: 0.72rem; letter-spacing: 0.05em; margin-top: 0.25rem; }
+.brand-crest { display: block; width: 64px; height: 64px; margin: 0 auto 0.5rem; }
 
 .nav-group { margin-bottom: 0.6rem; }
 .nav-group-title {
@@ -351,11 +352,12 @@ tbody tr:hover { background: rgba(184,134,44,0.08); }
   text-align: center;
   box-shadow: 0 20px 60px rgba(0,0,0,0.55);
 }
+.gate-crest { width: 120px; height: 120px; margin-bottom: 0.8rem; }
 .gate-card h1 { font-size: 1.4rem; margin-bottom: 0.3rem; }
 .gate-card .subtitle { font-style: italic; color: var(--ink-soft); margin-bottom: 1.6rem; }
 .discord-btn {
   display: inline-flex; align-items: center; gap: 0.6rem;
-  background: #4a3728; color: #f3e8cf; border: 1px solid var(--gold);
+  background: var(--wood-light); color: #f3e8cf; border: 1px solid var(--gold);
   padding: 0.7rem 1.4rem; border-radius: var(--radius);
   text-decoration: none; font-family: var(--font-display); font-size: 0.9rem;
 }

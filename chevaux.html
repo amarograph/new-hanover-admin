@@ -6,28 +6,102 @@
 <title>Registre des chevaux — Administration de New Hanover</title>
 <link rel="icon" type="image/png" href="/css/img/favicon.png">
 <link rel="stylesheet" href="/css/theme.css">
+<style>
+  tr.stolen td { color: var(--bordeaux-bright); font-weight: 600; }
+</style>
 </head>
-<body data-page="chevaux">
+<body data-page="chevaux" data-require-permission="chevaux:view">
 <div class="app-shell">
   <aside class="sidebar" id="sidebar"></aside>
   <div class="main">
     <header class="topbar" id="topbar"></header>
     <div class="content" id="content">
-      <h1>Registre des chevaux</h1>
+      <div class="flex-between">
+        <h1>Registre des chevaux</h1>
+        <button class="btn btn-gold" id="btn-new">+ Enregistrer un cheval</button>
+      </div>
+
+      <div class="tabs" id="status-tabs"></div>
+
+      <div class="sheet" style="display:flex; gap:0.8rem; align-items:flex-end;">
+        <div class="field" style="margin:0; flex:1;">
+          <label>Rechercher par nom, race, numéro ou propriétaire</label>
+          <input type="search" id="filter-q" placeholder="CHV-NH-001 ou mot-clé...">
+        </div>
+      </div>
+
       <div class="sheet">
-        <span class="stamp stamp-gold" style="margin-bottom:0.8rem;">Module à venir</span>
-        <p>Enregistrement des chevaux et de leurs propriétaires.</p>
-        <p class="muted">Format de numérotation prévu : <code>CHV-NH-001</code></p>
-        <h3>Prévu pour ce module</h3>
-        <ul class="muted" style="line-height:1.9;">
-          <li>Race, robe, sexe, âge, écurie de rattachement, signes distinctifs</li><li>Statuts : actif, vendu, perdu, volé, retrouvé, décédé, saisi, archivé</li><li>Historique : changements de propriétaire, vols, pertes, ventes, saisies</li>
-        </ul>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Numéro</th><th>Nom</th><th>Race</th><th>Robe</th><th>Propriétaire</th><th>Statut</th></tr></thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+        <div id="table-empty" class="empty-state" style="display:none;">Aucun cheval enregistré dans cette catégorie.</div>
       </div>
     </div>
   </div>
 </div>
+
+<div class="modal-backdrop" id="item-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Nouveau cheval</h2>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <form id="item-form">
+      <input type="hidden" id="f-id">
+      <div class="field-row">
+        <div class="field"><label>Nom</label><input type="text" id="f-name"></div>
+        <div class="field"><label>Race</label><input type="text" id="f-race"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Robe</label><input type="text" id="f-robe"></div>
+        <div class="field"><label>Sexe</label>
+          <select id="f-sexe">
+            <option value="">—</option>
+            <option value="male">Mâle</option>
+            <option value="femelle">Femelle</option>
+            <option value="hongre">Hongre</option>
+          </select>
+        </div>
+        <div class="field"><label>Âge</label><input type="number" min="0" id="f-age"></div>
+      </div>
+      <div class="field"><label>Écurie de rattachement</label><input type="text" id="f-ecurie"></div>
+      <div class="field"><label>Signes distinctifs</label><input type="text" id="f-signes"></div>
+      <div class="field-row">
+        <div class="field"><label>Prénom du propriétaire</label><input type="text" id="f-owner-first"></div>
+        <div class="field"><label>Nom du propriétaire</label><input type="text" id="f-owner-last"></div>
+      </div>
+      <div class="field">
+        <label>Statut</label>
+        <select id="f-status">
+          <option value="actif">Actif</option>
+          <option value="vendu">Vendu</option>
+          <option value="perdu">Perdu</option>
+          <option value="vole">Volé</option>
+          <option value="retrouve">Retrouvé</option>
+          <option value="decede">Décédé</option>
+          <option value="saisi">Saisi</option>
+          <option value="archive">Archivé</option>
+        </select>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="f-notes" style="min-height:60px;"></textarea></div>
+
+      <div id="item-meta" class="muted" style="margin-bottom:0.6rem;"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-danger" id="btn-delete" style="margin-right:auto; display:none;">Supprimer</button>
+        <button type="button" class="btn btn-outline" id="modal-cancel">Annuler</button>
+        <button type="submit" class="btn btn-gold" id="save-btn">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script src="/js/api.js"></script>
 <script src="/js/utils.js"></script>
 <script src="/js/nav.js"></script>
+<script src="/js/pages/chevaux.js"></script>
 </body>
 </html>

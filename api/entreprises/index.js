@@ -569,7 +569,126 @@ export default async function handler(req, res) {
   if (req.query.resource === 'courriers') return handleCourriers(req, res, user, slug);
   if (req.query.resource === 'boite_lettres') return handleBoiteLettres(req, res, user, slug);
   if (req.query.resource === 'armes') return handleArmes(req, res, user, slug);
+  if (req.query.resource === 'chevaux') return handleChevaux(req, res, user, slug);
   return handleEntreprises(req, res, user, slug);
+}
+
+// ---------------------------------------------------------------------------
+// Registre des chevaux (?resource=chevaux). Statut "vole" mis en évidence
+// côté frontend, même principe que le registre des armes.
+// ---------------------------------------------------------------------------
+
+const CHEVAL_SELECT = `SELECT c.*, au.discord_username as author_name
+  FROM chevaux c
+  LEFT JOIN users au ON au.id = c.author_id`;
+
+const CHEVAL_STATUSES = ['actif', 'vendu', 'perdu', 'vole', 'retrouve', 'decede', 'saisi', 'archive'];
+
+async function getCheval(id) {
+  return db.prepare(CHEVAL_SELECT + ' WHERE c.id = ?').bind(id).first();
+}
+
+async function listChevaux(req, res, user) {
+  if (!hasPermission(user, 'chevaux', 'view')) return sendError(res, 'Accès refusé', 403);
+
+  const { status, q } = req.query;
+  let query = CHEVAL_SELECT + ' WHERE 1=1';
+  const binds = [];
+  if (status) { query += ' AND c.status = ?'; binds.push(status); }
+  if (q) {
+    query += ' AND (c.name LIKE ? OR c.race LIKE ? OR c.number LIKE ? OR c.owner_last_name LIKE ?)';
+    binds.push(`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`);
+  }
+  query += ' ORDER BY c.created_at DESC';
+
+  const { results } = await db.prepare(query).bind(...binds).all();
+  return sendJson(res, { chevaux: results });
+}
+
+function readChevalBody(body) {
+  return {
+    name: body.name || '',
+    race: body.race || '',
+    robe: body.robe || '',
+    sexe: body.sexe || '',
+    age: body.age !== undefined && body.age !== '' ? Number(body.age) : null,
+    ecurie: body.ecurie || '',
+    signes_distinctifs: body.signes_distinctifs || '',
+    owner_first_name: body.owner_first_name || '',
+    owner_last_name: body.owner_last_name || '',
+    status: CHEVAL_STATUSES.includes(body.status) ? body.status : 'actif',
+    notes: body.notes || '',
+  };
+}
+
+async function createCheval(req, res, user) {
+  if (!hasPermission(user, 'chevaux', 'add')) return sendError(res, 'Accès refusé', 403);
+
+  const body = req.body || {};
+  const f = readChevalBody(body);
+
+  const number = await nextNumber(db, 'CHV-NH');
+  const result = await db.prepare(
+    `INSERT INTO chevaux (number, name, race, robe, sexe, age, ecurie, signes_distinctifs, owner_first_name, owner_last_name, status, notes, author_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+  ).bind(
+    number, f.name, f.race, f.robe, f.sexe, f.age, f.ecurie, f.signes_distinctifs,
+    f.owner_first_name, f.owner_last_name, f.status, f.notes, user.id
+  ).run();
+
+  const id = result.meta.last_row_id;
+  await logActivity(db, user.id, 'Enregistrement d\'un cheval', 'cheval', id, null, { number, name: f.name });
+  return sendJson(res, { id, number }, 201);
+}
+
+async function handleChevaux(req, res, user, slug) {
+  if (slug.length === 0) {
+    if (req.method === 'GET') return listChevaux(req, res, user);
+    if (req.method === 'POST') return createCheval(req, res, user);
+    res.setHeader('Allow', 'GET, POST');
+    return sendError(res, 'Méthode non autorisée', 405);
+  }
+
+  const id = slug[0];
+
+  if (req.method === 'GET') {
+    if (!hasPermission(user, 'chevaux', 'view')) return sendError(res, 'Accès refusé', 403);
+    const cheval = await getCheval(id);
+    if (!cheval) return sendError(res, 'Cheval introuvable', 404);
+    return sendJson(res, { cheval });
+  }
+
+  if (req.method === 'PUT') {
+    if (!hasPermission(user, 'chevaux', 'edit')) return sendError(res, 'Accès refusé', 403);
+    const before = await getCheval(id);
+    if (!before) return sendError(res, 'Cheval introuvable', 404);
+
+    const body = req.body || {};
+    const f = readChevalBody(body);
+
+    await db.prepare(
+      `UPDATE chevaux SET name=?, race=?, robe=?, sexe=?, age=?, ecurie=?, signes_distinctifs=?, owner_first_name=?, owner_last_name=?, status=?, notes=?, updated_at=${NOW_EXPR} WHERE id=?`
+    ).bind(
+      f.name, f.race, f.robe, f.sexe, f.age, f.ecurie, f.signes_distinctifs,
+      f.owner_first_name, f.owner_last_name, f.status, f.notes, id
+    ).run();
+
+    await logActivity(db, user.id, 'Modification de la fiche cheval', 'cheval', id, before, body);
+    return sendJson(res, { ok: true });
+  }
+
+  if (req.method === 'DELETE') {
+    if (!hasPermission(user, 'chevaux', 'delete')) return sendError(res, 'Accès refusé', 403);
+    const before = await getCheval(id);
+    if (!before) return sendError(res, 'Cheval introuvable', 404);
+
+    await db.prepare('DELETE FROM chevaux WHERE id=?').bind(id).run();
+    await logActivity(db, user.id, 'Suppression de la fiche cheval', 'cheval', id, before, null);
+    return sendJson(res, { ok: true });
+  }
+
+  res.setHeader('Allow', 'GET, POST, PUT, DELETE');
+  return sendError(res, 'Méthode non autorisée', 405);
 }
 
 // ---------------------------------------------------------------------------

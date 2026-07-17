@@ -170,3 +170,24 @@ NH.ARME_CATEGORY_STAMP_CLASS = {
   illegale: 'stamp-red',
   non_connu: 'stamp-grey',
 };
+
+NH.CHEVAL_STATUS_LABELS = {
+  actif: 'Actif',
+  vendu: 'Vendu',
+  perdu: 'Perdu',
+  vole: 'Volé',
+  retrouve: 'Retrouvé',
+  decede: 'Décédé',
+  saisi: 'Saisi',
+  archive: 'Archivé',
+};
+NH.CHEVAL_STATUS_STAMP_CLASS = {
+  actif: 'stamp-green',
+  vendu: 'stamp-neutral',
+  perdu: 'stamp-gold',
+  vole: 'stamp-red',
+  retrouve: 'stamp-green',
+  decede: 'stamp-grey',
+  saisi: 'stamp-gold',
+  archive: 'stamp-grey',
+};

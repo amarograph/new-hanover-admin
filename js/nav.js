@@ -13,7 +13,7 @@
       { href: '/courriers.html', label: 'Courriers', icon: '✎', page: 'courriers', perm: ['courriers', 'view'] },
       { href: '/boite-lettres.html', label: 'Boîte aux lettres', icon: '✉', page: 'boite-lettres', perm: ['boite_lettres', 'view'] },
       { href: '/armes.html', label: 'Registre des armes', icon: '⚔', page: 'armes', perm: ['armes', 'view'] },
-      { href: '/chevaux.html', label: 'Registre des chevaux', icon: '♞', page: 'chevaux' },
+      { href: '/chevaux.html', label: 'Registre des chevaux', icon: '♞', page: 'chevaux', perm: ['chevaux', 'view'] },
       { href: '/inventaire.html', label: 'Inventaire du coffre', icon: '⚿', page: 'inventaire' },
       { href: '/evenements.html', label: 'Événements', icon: '✦', page: 'evenements' },
       { href: '/archives.html', label: 'Archives', icon: '⌘', page: 'archives' },

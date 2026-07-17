@@ -16,6 +16,8 @@
     { "source": "/api/boite-lettres/:id", "destination": "/api/entreprises?resource=boite_lettres&slug=:id" },
     { "source": "/api/armes", "destination": "/api/entreprises?resource=armes" },
     { "source": "/api/armes/:id", "destination": "/api/entreprises?resource=armes&slug=:id" },
+    { "source": "/api/chevaux", "destination": "/api/entreprises?resource=chevaux" },
+    { "source": "/api/chevaux/:id", "destination": "/api/entreprises?resource=chevaux&slug=:id" },
     { "source": "/api/roles/:id", "destination": "/api/roles?slug=:id" },
     { "source": "/api/users/:id", "destination": "/api/users?slug=:id" }
   ]

@@ -189,6 +189,26 @@ CREATE TABLE IF NOT EXISTS armes (
 );
 CREATE INDEX IF NOT EXISTS idx_armes_category ON armes(category);
 
+CREATE TABLE IF NOT EXISTS chevaux (
+  id SERIAL PRIMARY KEY,
+  number TEXT UNIQUE,
+  name TEXT,
+  race TEXT,
+  robe TEXT,
+  sexe TEXT,
+  age INTEGER,
+  ecurie TEXT,
+  signes_distinctifs TEXT,
+  owner_first_name TEXT,
+  owner_last_name TEXT,
+  status TEXT NOT NULL DEFAULT 'actif',
+  notes TEXT,
+  author_id INTEGER REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'),
+  updated_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
+);
+CREATE INDEX IF NOT EXISTS idx_chevaux_status ON chevaux(status);
+
 CREATE TABLE IF NOT EXISTS transactions (
   id SERIAL PRIMARY KEY,
   number TEXT UNIQUE,

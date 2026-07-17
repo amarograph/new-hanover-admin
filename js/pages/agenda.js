@@ -32,14 +32,19 @@ function rangeForView() {
   return { from: toISODate(gridStart), to: toISODate(gridEnd) };
 }
 
+// Affichage uniquement : l'année réelle sert au stockage/tri des dates,
+// mais l'univers du site se situe en 1892, donc on ne l'affiche jamais.
 function periodLabel() {
   const opts = { jour: { day: '2-digit', month: 'long', year: 'numeric' }, semaine: {}, mois: { month: 'long', year: 'numeric' } };
+  let label;
   if (agendaState.view === 'semaine') {
     const start = startOfWeek(agendaState.refDate);
     const end = addDays(start, 6);
-    return `${start.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })} — ${end.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+    label = `${start.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })} — ${end.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+  } else {
+    label = agendaState.refDate.toLocaleDateString('fr-FR', opts[agendaState.view]);
   }
-  return agendaState.refDate.toLocaleDateString('fr-FR', opts[agendaState.view]);
+  return label.replace(/\d{4}/, '1892');
 }
 
 function eventsOn(dateISO) { return eventsCache.filter((e) => e.date === dateISO); }

@@ -40,6 +40,12 @@ export default async function handler(req, res) {
     ).bind(like).all();
     r.forEach((x) => results.push({ type: 'agenda', label: `${x.title} (${x.date})`, url: `/agenda.html?id=${x.id}` }));
   }
+  if (hasPermission(user, 'entreprises', 'view')) {
+    const { results: r } = await db.prepare(
+      "SELECT id, number, name FROM entreprises WHERE name LIKE ? OR number LIKE ? LIMIT 5"
+    ).bind(like, like).all();
+    r.forEach((x) => results.push({ type: 'entreprise', label: `${x.number} — ${x.name}`, url: `/entreprises.html?id=${x.id}` }));
+  }
   if (hasPermission(user, 'admin', 'manage_users')) {
     const { results: r } = await db.prepare(
       "SELECT id, discord_username, character_first_name, character_last_name FROM users WHERE discord_username LIKE ? OR character_first_name LIKE ? OR character_last_name LIKE ? LIMIT 5"

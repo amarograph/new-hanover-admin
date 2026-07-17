@@ -133,3 +133,18 @@ NH.USER_STATUS_STAMP_CLASS = {
 
 NH.TRANSACTION_CATEGORY_LABELS_IN = ['Taxes', 'Impôts', 'Amendes', 'Dons', 'Paiements de licences', 'Revenus d\'événements', 'Remboursements', 'Autres revenus'];
 NH.TRANSACTION_CATEGORY_LABELS_OUT = ['Salaires', 'Achats de matériel', 'Subventions', 'Remboursements', 'Organisation d\'événements', 'Travaux', 'Déplacements', 'Dépenses administratives', 'Autres dépenses'];
+
+NH.ENTREPRISE_STATUS_LABELS = {
+  active: 'Active',
+  en_attente_autorisation: 'En attente d\'autorisation',
+  suspendue: 'Suspendue',
+  fermee: 'Fermée',
+  archivee: 'Archivée',
+};
+NH.ENTREPRISE_STATUS_STAMP_CLASS = {
+  active: 'stamp-green',
+  en_attente_autorisation: 'stamp-gold',
+  suspendue: 'stamp-red',
+  fermee: 'stamp-grey',
+  archivee: 'stamp-grey',
+};

@@ -6,7 +6,7 @@
       { href: '/decrets.html', label: 'Décrets', icon: '§', page: 'decrets', perm: ['decrees', 'view'] },
       { href: '/communiques.html', label: 'Communiqués', icon: '✉', page: 'communiques', perm: ['communiques', 'view'] },
       { href: '/agenda.html', label: 'Agenda', icon: '▤', page: 'agenda', perm: ['agenda', 'view'] },
-      { href: '/entreprises.html', label: 'Entreprises', icon: '⚑', page: 'entreprises' },
+      { href: '/entreprises.html', label: 'Entreprises', icon: '⚑', page: 'entreprises', perm: ['entreprises', 'view'] },
       { href: '/comptabilite.html', label: 'Comptabilité', icon: '⚖', page: 'comptabilite', perm: ['accounting', 'view'] },
       { href: '/employes.html', label: 'Employés', icon: '☺', page: 'employes' },
       { href: '/taches.html', label: 'Tâches', icon: '✓', page: 'taches' },

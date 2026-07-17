@@ -103,6 +103,26 @@ CREATE TABLE IF NOT EXISTS agenda_events (
   updated_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
 );
 
+CREATE TABLE IF NOT EXISTS entreprises (
+  id SERIAL PRIMARY KEY,
+  number TEXT UNIQUE,
+  name TEXT NOT NULL,
+  activity TEXT,
+  address TEXT,
+  license TEXT,
+  status TEXT NOT NULL DEFAULT 'active',
+  owner_first_name TEXT,
+  owner_last_name TEXT,
+  co_owner_first_name TEXT,
+  co_owner_last_name TEXT,
+  account_number TEXT,
+  balance REAL NOT NULL DEFAULT 0,
+  notes TEXT,
+  author_id INTEGER REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'),
+  updated_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
+);
+
 CREATE TABLE IF NOT EXISTS transactions (
   id SERIAL PRIMARY KEY,
   number TEXT UNIQUE,
@@ -140,6 +160,7 @@ CREATE INDEX IF NOT EXISTS idx_agenda_date ON agenda_events(date);
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
 CREATE INDEX IF NOT EXISTS idx_activity_log_created ON activity_log(created_at);
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_entreprises_status ON entreprises(status);
 
 -- Rôles par défaut. Modules : decrees, communiques, agenda, accounting, admin.
 -- Actions possibles : view, add, edit, archive, delete, validate, refuse, download, manage_users, view_log.

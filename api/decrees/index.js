@@ -9,6 +9,26 @@ const SELECT = `SELECT d.*, au.discord_username as author_name, vu.discord_usern
   LEFT JOIN users au ON au.id = d.author_id
   LEFT JOIN users vu ON vu.id = d.validated_by_id`;
 
+// La liste omet la colonne image (potentiellement volumineuse en base64)
+// pour ne pas alourdir la réponse ; seule la fiche détail la renvoie.
+const SELECT_LIST = SELECT.replace('d.*', `d.id, d.number, d.title, d.category, d.status, d.created_at,
+    d.effective_date, d.author_id, d.validated_by_id, d.confidentiality, d.updated_at`);
+
+// Limite basse : une fois encodée en base64 (+33%) et intégrée au JSON,
+// la requête doit rester sous la limite de taille des fonctions Vercel (~4.5 Mo).
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+
+function validateImage(image) {
+  if (image === undefined || image === null || image === '') return null;
+  if (typeof image !== 'string' || !/^data:image\/(png|jpeg|jpg|gif|webp);base64,/.test(image)) {
+    throw new Error('Format d\'image invalide.');
+  }
+  if (image.length > MAX_IMAGE_BYTES * 1.4) {
+    throw new Error('Image trop volumineuse (2 Mo maximum).');
+  }
+  return image;
+}
+
 async function getDecree(id) {
   return db.prepare(SELECT + ' WHERE d.id = ?').bind(id).first();
 }
@@ -17,7 +37,7 @@ async function list(req, res, user) {
   if (!hasPermission(user, 'decrees', 'view')) return sendError(res, 'Accès refusé', 403);
 
   const { category, author, q } = req.query;
-  let query = SELECT + ' WHERE 1=1';
+  let query = SELECT_LIST + ' WHERE 1=1';
   const binds = [];
   if (category) { query += ' AND d.category = ?'; binds.push(category); }
   if (author) { query += ' AND d.author_id = ?'; binds.push(author); }
@@ -34,15 +54,18 @@ async function create(req, res, user) {
   const body = req.body || {};
   if (!body.title) return sendError(res, 'Le titre est requis', 422);
 
+  let image;
+  try { image = validateImage(body.image); } catch (e) { return sendError(res, e.message, 422); }
+
   const number = await nextNumber(db, 'DEC-NH', '1892');
   const category = body.category || 'a_faire';
   const result = await db.prepare(
-    `INSERT INTO decrees (number, title, category, status, effective_date, author_id, content, attachments, confidentiality, internal_notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+    `INSERT INTO decrees (number, title, category, status, effective_date, author_id, content, attachments, confidentiality, internal_notes, image)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
   ).bind(
     number, body.title, category, category, body.effective_date || null, user.id,
     body.content || '', JSON.stringify(body.attachments || []),
-    body.confidentiality || 'interne', body.internal_notes || ''
+    body.confidentiality || 'interne', body.internal_notes || '', image
   ).run();
 
   const id = result.meta.last_row_id;
@@ -87,15 +110,23 @@ export default async function handler(req, res) {
     const body = req.body || {};
     if (!body.title) return sendError(res, 'Le titre est requis', 422);
 
+    let image;
+    try { image = validateImage(body.image); } catch (e) { return sendError(res, e.message, 422); }
+    // image absent du payload => on garde l'image existante (pas d'écrasement involontaire)
+    if (body.image === undefined) image = before.image;
+
     await db.prepare(
-      `UPDATE decrees SET title=?, content=?, effective_date=?, attachments=?, confidentiality=?, internal_notes=?, updated_at=${NOW_EXPR} WHERE id=?`
+      `UPDATE decrees SET title=?, content=?, effective_date=?, attachments=?, confidentiality=?, internal_notes=?, image=?, updated_at=${NOW_EXPR} WHERE id=?`
     ).bind(
       body.title, body.content || '', body.effective_date || null,
       JSON.stringify(body.attachments || []), body.confidentiality || 'interne',
-      body.internal_notes || '', id
+      body.internal_notes || '', image, id
     ).run();
 
-    await logActivity(db, user.id, 'Modification du décret', 'decree', id, before, body);
+    // On exclut l'image (base64) du journal d'activité pour ne pas l'alourdir inutilement.
+    const { image: beforeImage, ...beforeLog } = before;
+    const { image: bodyImage, ...bodyLog } = body;
+    await logActivity(db, user.id, 'Modification du décret', 'decree', id, beforeLog, bodyLog);
     return sendJson(res, { ok: true });
   }
 
@@ -123,7 +154,8 @@ export default async function handler(req, res) {
     if (!before) return sendError(res, 'Décret introuvable', 404);
 
     await db.prepare('DELETE FROM decrees WHERE id=?').bind(id).run();
-    await logActivity(db, user.id, 'Suppression du décret', 'decree', id, before, null);
+    const { image: deletedImage, ...beforeLog } = before;
+    await logActivity(db, user.id, 'Suppression du décret', 'decree', id, beforeLog, null);
     return sendJson(res, { ok: true });
   }
 

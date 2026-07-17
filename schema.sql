@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS decrees (
   attachments TEXT DEFAULT '[]',
   confidentiality TEXT NOT NULL DEFAULT 'interne',
   internal_notes TEXT,
+  image TEXT,
   updated_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
 );
 

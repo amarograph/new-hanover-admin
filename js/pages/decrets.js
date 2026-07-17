@@ -10,6 +10,21 @@ const DECREE_CATEGORIES = [
 
 const decreeState = { category: '', q: '' };
 let currentUser = null;
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+// undefined = pas de changement, null = suppression demandée, string = nouvelle image
+let pendingImage;
+
+function renderImagePreview(imageDataUrl) {
+  const preview = document.getElementById('decree-image-preview');
+  if (!imageDataUrl) { preview.innerHTML = ''; return; }
+  preview.innerHTML = `
+    <img src="${imageDataUrl}" style="max-width:220px; max-height:220px; border-radius:4px; display:block; margin-bottom:0.4rem;">
+    <button type="button" class="btn btn-outline btn-sm no-print" id="decree-image-remove">Retirer l'image</button>`;
+  document.getElementById('decree-image-remove').addEventListener('click', () => {
+    pendingImage = null;
+    renderImagePreview(null);
+  });
+}
 
 function decreeStatusActions(decree) {
   const actions = [];
@@ -84,6 +99,10 @@ function fillDecreeForm(decree) {
   const attachments = decree.attachments ? JSON.parse(decree.attachments) : [];
   document.getElementById('decree-attachments').value = attachments.join('\n');
 
+  pendingImage = undefined;
+  document.getElementById('decree-image-input').value = '';
+  renderImagePreview(decree.image || null);
+
   const meta = document.getElementById('decree-meta');
   meta.textContent = decree.id
     ? `${decree.number || ''} — Auteur : ${decree.author_name || '—'}${decree.validator_name ? ' — Validé par ' + decree.validator_name : ''} — Statut : ${NH.STATUS_LABELS[decree.category] || decree.category}`
@@ -110,6 +129,8 @@ function fillDecreeForm(decree) {
   const canEdit = decree.id ? NH.hasPermission(currentUser, 'decrees', 'edit') : NH.hasPermission(currentUser, 'decrees', 'add');
   document.getElementById('decree-save-btn').style.display = canEdit ? '' : 'none';
   document.querySelectorAll('#decree-form input, #decree-form textarea, #decree-form select').forEach((el) => { el.disabled = !canEdit; });
+  const removeBtn = document.getElementById('decree-image-remove');
+  if (removeBtn && !canEdit) removeBtn.style.display = 'none';
 }
 
 async function openDecreeModal(id) {
@@ -130,14 +151,16 @@ function printDecree() {
   const number = document.getElementById('decree-meta').textContent;
   const content = document.getElementById('decree-content').value;
   const effectiveDate = document.getElementById('decree-effective-date').value;
+  const imageEl = document.querySelector('#decree-image-preview img');
   const win = window.open('', '_blank');
   win.document.write(`
     <html><head><title>${NH.escapeHtml(title)}</title>
     <style>body{font-family:Georgia,serif; max-width:700px; margin:3rem auto; color:#241611;}
     h1{border-bottom:2px solid #b8862c; padding-bottom:0.5rem;} .meta{color:#555; font-size:0.85rem; margin-bottom:2rem;}
-    .content{white-space:pre-wrap; line-height:1.6;}</style></head>
+    .content{white-space:pre-wrap; line-height:1.6;} img{max-width:100%; margin-bottom:1.5rem;}</style></head>
     <body><h1>${NH.escapeHtml(title)}</h1>
     <div class="meta">${NH.escapeHtml(number)}${effectiveDate ? ' — Entrée en vigueur : ' + NH.formatDate(effectiveDate) : ''}</div>
+    ${imageEl ? `<img src="${imageEl.src}">` : ''}
     <div class="content">${NH.escapeHtml(content)}</div>
     </body></html>`);
   win.document.close();
@@ -158,6 +181,22 @@ document.addEventListener('nh:ready', (evt) => {
   document.getElementById('decree-modal-cancel').addEventListener('click', () => NH.closeModal('decree-modal'));
   document.getElementById('decree-print-btn').addEventListener('click', printDecree);
 
+  document.getElementById('decree-image-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > MAX_IMAGE_BYTES) {
+      NH.toast('Image trop volumineuse (2 Mo maximum).', 'error');
+      e.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      pendingImage = reader.result;
+      renderImagePreview(pendingImage);
+    };
+    reader.readAsDataURL(file);
+  });
+
   let searchTimer;
   document.getElementById('filter-q').addEventListener('input', (e) => {
     clearTimeout(searchTimer);
@@ -175,6 +214,7 @@ document.addEventListener('nh:ready', (evt) => {
       internal_notes: document.getElementById('decree-notes').value,
       attachments: document.getElementById('decree-attachments').value.split('\n').map((s) => s.trim()).filter(Boolean),
     };
+    if (pendingImage !== undefined) payload.image = pendingImage;
     try {
       if (id) {
         await NH.put(`/api/decrees/${id}`, payload);

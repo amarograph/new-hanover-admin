@@ -1,0 +1,11 @@
+{
+  "rewrites": [
+    { "source": "/api/auth/:action", "destination": "/api/auth?action=:action" },
+    { "source": "/api/agenda/:id", "destination": "/api/agenda?slug=:id" },
+    { "source": "/api/accounting/:id", "destination": "/api/accounting?slug=:id" },
+    { "source": "/api/communiques/:id", "destination": "/api/communiques?slug=:id" },
+    { "source": "/api/decrees/:id", "destination": "/api/decrees?slug=:id" },
+    { "source": "/api/roles/:id", "destination": "/api/roles?slug=:id" },
+    { "source": "/api/users/:id", "destination": "/api/users?slug=:id" }
+  ]
+}

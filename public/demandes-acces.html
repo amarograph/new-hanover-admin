@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demandes d'accès — Administration de New Hanover</title>
+<link rel="stylesheet" href="/css/theme.css">
+</head>
+<body data-page="demandes-acces" data-require-permission="admin:manage_users">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <div class="content" id="content">
+      <h1>Demandes d'accès</h1>
+      <p class="muted">Comptes créés lors d'une première connexion Discord, en attente de validation par un administrateur.</p>
+
+      <div class="sheet">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Pseudo Discord</th><th>Identifiant Discord</th><th>Demandé le</th><th class="text-right">Actions</th></tr></thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+        <div id="table-empty" class="empty-state" style="display:none;">Aucune demande en attente.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="approve-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Accepter la demande</h2>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <form id="approve-form">
+      <input type="hidden" id="f-id">
+      <div class="field-row">
+        <div class="field"><label>Prénom du personnage</label><input type="text" id="f-first-name"></div>
+        <div class="field"><label>Nom du personnage</label><input type="text" id="f-last-name"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Fonction</label><input type="text" id="f-job-title"></div>
+        <div class="field"><label>Grade</label><input type="text" id="f-grade"></div>
+      </div>
+      <div class="field"><label>Rôle attribué</label><select id="f-role" required></select></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="modal-cancel">Annuler</button>
+        <button type="submit" class="btn btn-gold">Accepter la demande</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/pages/demandes-acces.js"></script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accès refusé — Administration de New Hanover</title>
+<link rel="stylesheet" href="/css/theme.css">
+</head>
+<body>
+<div class="gate-page">
+  <div class="gate-card">
+    <span class="stamp stamp-red" id="status-stamp" style="margin-bottom:1rem;">Compte bloqué</span>
+    <h1 id="status-title">Accès non autorisé</h1>
+    <p class="subtitle" id="status-text">Votre compte ne dispose plus d'un accès à la plateforme.</p>
+    <button class="btn" id="logout-btn" style="margin-top:1rem;">Déconnexion</button>
+  </div>
+</div>
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script>
+(function () {
+  const status = new URLSearchParams(window.location.search).get('status') || 'refused';
+  const texts = {
+    refused: ['Compte refusé', "Votre demande d'accès a été refusée par un administrateur."],
+    suspended: ['Compte suspendu', 'Votre compte a été temporairement suspendu. Contactez un administrateur pour plus de détails.'],
+    disabled: ['Compte désactivé', 'Votre compte a été désactivé et n\'a plus accès à la plateforme.'],
+  };
+  const [title, text] = texts[status] || texts.refused;
+  document.getElementById('status-title').textContent = title;
+  document.getElementById('status-text').textContent = text;
+  document.getElementById('status-stamp').textContent = title;
+
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/';
+  });
+})();
+</script>
+</body>
+</html>

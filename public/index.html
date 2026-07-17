@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administration de New Hanover — Connexion</title>
+<link rel="stylesheet" href="/css/theme.css">
+</head>
+<body>
+<div class="gate-page">
+  <div class="gate-card">
+    <h1>Administration de New Hanover</h1>
+    <p class="subtitle">Territoire du New Hanover — 1892</p>
+    <p id="gate-message" class="muted" style="margin-bottom:1.4rem;">Connexion réservée au personnel autorisé de l'administration. L'accès se fait exclusivement via un compte Discord.</p>
+    <a class="discord-btn" href="/api/auth/login">Se connecter avec Discord</a>
+    <p class="muted" style="margin-top:1.6rem; font-size:0.78rem;">Seuls votre pseudo Discord et votre identifiant Discord sont enregistrés. Aucune autre donnée de votre compte Discord n'est conservée.</p>
+  </div>
+</div>
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script>
+(function () {
+  const params = new URLSearchParams(window.location.search);
+  const error = params.get('error');
+  if (error === 'oauth_failed') {
+    document.getElementById('gate-message').textContent = "La connexion via Discord a échoué. Merci de réessayer.";
+  } else if (error === 'missing_code') {
+    document.getElementById('gate-message').textContent = "Connexion incomplète. Merci de réessayer.";
+  }
+  NH.get('/api/auth/me').then((data) => {
+    if (!data.authenticated) return;
+    if (data.user.status === 'accepted') window.location.href = '/dashboard.html';
+    else if (data.user.status === 'pending') window.location.href = '/en-attente.html';
+    else window.location.href = `/compte-bloque.html?status=${data.user.status}`;
+  }).catch(() => {});
+})();
+</script>
+</body>
+</html>

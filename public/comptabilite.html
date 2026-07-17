@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comptabilité — Administration de New Hanover</title>
+<link rel="stylesheet" href="/css/theme.css">
+</head>
+<body data-page="comptabilite" data-require-permission="accounting:view">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <div class="content" id="content">
+      <div class="flex-between">
+        <h1>Comptabilité de l'administration</h1>
+        <button class="btn btn-gold" id="btn-new">+ Ajouter une transaction</button>
+      </div>
+
+      <div class="card-row" id="stat-tiles"></div>
+
+      <div class="sheet" style="display:flex; gap:0.8rem; flex-wrap:wrap; align-items:flex-end;">
+        <div class="field" style="margin:0;">
+          <label>Type</label>
+          <select id="filter-type"><option value="">Tous</option><option value="entree">Entrées</option><option value="sortie">Sorties</option></select>
+        </div>
+        <div class="field" style="margin:0;">
+          <label>Statut</label>
+          <select id="filter-status"><option value="">Tous</option><option value="en_attente">En attente</option><option value="validee">Validée</option><option value="annulee">Annulée</option></select>
+        </div>
+        <div class="field" style="margin:0;">
+          <label>Depuis</label>
+          <input type="date" id="filter-from">
+        </div>
+        <div class="field" style="margin:0;">
+          <label>Jusqu'à</label>
+          <input type="date" id="filter-to">
+        </div>
+        <button class="btn btn-outline btn-sm" id="btn-export">Exporter en CSV</button>
+      </div>
+
+      <div class="sheet">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Numéro</th><th>Type</th><th>Date</th><th>Catégorie</th><th>Motif</th><th class="text-right">Montant</th><th>Statut</th></tr></thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+        <div id="table-empty" class="empty-state" style="display:none;">Aucune transaction.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="tx-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Nouvelle transaction</h2>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <form id="tx-form">
+      <input type="hidden" id="f-id">
+      <div class="field-row">
+        <div class="field"><label>Type</label>
+          <select id="f-type" required>
+            <option value="entree">Entrée</option>
+            <option value="sortie">Sortie</option>
+          </select>
+        </div>
+        <div class="field"><label>Montant ($)</label><input type="number" step="0.01" min="0.01" id="f-amount" required></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Date</label><input type="date" id="f-date" required></div>
+        <div class="field"><label>Heure</label><input type="time" id="f-time"></div>
+      </div>
+      <div class="field"><label>Catégorie</label><input type="text" id="f-category" list="category-options"><datalist id="category-options"></datalist></div>
+      <div class="field"><label>Motif</label><input type="text" id="f-reason"></div>
+      <div class="field-row">
+        <div class="field"><label>Personne concernée</label><input type="text" id="f-person"></div>
+        <div class="field"><label>Entreprise concernée</label><input type="text" id="f-business"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Moyen de paiement</label><input type="text" id="f-payment"></div>
+        <div class="field"><label>Justificatif (lien ou référence)</label><input type="text" id="f-receipt"></div>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="f-notes" style="min-height:60px;"></textarea></div>
+
+      <div id="tx-meta" class="muted" style="margin-bottom:0.6rem;"></div>
+
+      <div class="modal-actions">
+        <div id="status-actions" style="margin-right:auto; display:flex; gap:0.4rem; flex-wrap:wrap;"></div>
+        <button type="button" class="btn btn-outline" id="modal-cancel">Annuler</button>
+        <button type="submit" class="btn btn-gold" id="save-btn">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/pages/comptabilite.js"></script>
+</body>
+</html>

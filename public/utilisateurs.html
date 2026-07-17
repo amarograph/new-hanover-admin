@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Utilisateurs — Administration de New Hanover</title>
+<link rel="stylesheet" href="/css/theme.css">
+</head>
+<body data-page="utilisateurs" data-require-permission="admin:manage_users">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <div class="content" id="content">
+      <h1>Utilisateurs de l'administration</h1>
+
+      <div class="tabs" id="status-tabs"></div>
+
+      <div class="sheet">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Personnage</th><th>Pseudo Discord</th><th>Fonction</th><th>Rôle</th><th>Statut</th><th>Dernière connexion</th></tr></thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+        <div id="table-empty" class="empty-state" style="display:none;">Aucun utilisateur.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="user-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Fiche utilisateur</h2>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <form id="user-form">
+      <input type="hidden" id="f-id">
+      <div class="muted" id="user-discord-info" style="margin-bottom:0.8rem;"></div>
+      <div class="field-row">
+        <div class="field"><label>Prénom du personnage</label><input type="text" id="f-first-name"></div>
+        <div class="field"><label>Nom du personnage</label><input type="text" id="f-last-name"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Fonction</label><input type="text" id="f-job-title"></div>
+        <div class="field"><label>Grade</label><input type="text" id="f-grade"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Date d'arrivée</label><input type="date" id="f-arrival-date"></div>
+        <div class="field"><label>Rôle</label><select id="f-role"></select></div>
+      </div>
+      <div class="field"><label>Statut du compte</label>
+        <select id="f-status">
+          <option value="pending">En attente de validation</option>
+          <option value="accepted">Compte accepté</option>
+          <option value="refused">Compte refusé</option>
+          <option value="suspended">Compte suspendu</option>
+          <option value="disabled">Compte désactivé</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="modal-cancel">Annuler</button>
+        <button type="submit" class="btn btn-gold">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/pages/utilisateurs.js"></script>
+</body>
+</html>

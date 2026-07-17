@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demande en attente — Administration de New Hanover</title>
+<link rel="stylesheet" href="/css/theme.css">
+</head>
+<body>
+<div class="gate-page">
+  <div class="gate-card">
+    <span class="stamp stamp-gold" style="margin-bottom:1rem;">En attente de validation</span>
+    <h1>Votre demande a été enregistrée</h1>
+    <p class="subtitle">Un administrateur doit valider votre accès avant que vous puissiez consulter la plateforme.</p>
+    <p class="muted">Revenez plus tard, ou contactez un administrateur de New Hanover pour accélérer la validation de votre compte.</p>
+    <button class="btn btn-outline" id="refresh-btn" style="margin-top:1.2rem;">Vérifier à nouveau</button>
+    <br>
+    <button class="btn" id="logout-btn" style="margin-top:0.8rem;">Déconnexion</button>
+  </div>
+</div>
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script>
+(async function () {
+  let data;
+  try { data = await NH.get('/api/auth/me'); } catch (e) { window.location.href = '/'; return; }
+  if (!data.authenticated) { window.location.href = '/'; return; }
+  if (data.user.status === 'accepted') { window.location.href = '/dashboard.html'; return; }
+  if (data.user.status !== 'pending') { window.location.href = `/compte-bloque.html?status=${data.user.status}`; return; }
+
+  document.getElementById('refresh-btn').addEventListener('click', () => window.location.reload());
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/';
+  });
+})();
+</script>
+</body>
+</html>

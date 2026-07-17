@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Décrets — Administration de New Hanover</title>
+<link rel="stylesheet" href="/css/theme.css">
+</head>
+<body data-page="decrets" data-require-permission="decrees:view">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <div class="content" id="content">
+      <div class="flex-between">
+        <h1>Décrets de New Hanover</h1>
+        <button class="btn btn-gold no-print" id="btn-new-decree">+ Créer un décret</button>
+      </div>
+
+      <div class="tabs no-print" id="category-tabs"></div>
+
+      <div class="sheet no-print" style="display:flex; gap:0.8rem; align-items:flex-end;">
+        <div class="field" style="margin:0; flex:1;">
+          <label>Rechercher par numéro ou titre</label>
+          <input type="search" id="filter-q" placeholder="DEC-NH-1892-001 ou mot du titre...">
+        </div>
+      </div>
+
+      <div class="sheet">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Numéro</th><th>Titre</th><th>Auteur</th><th>Créé le</th><th>Statut</th><th></th></tr></thead>
+            <tbody id="decrees-table-body"></tbody>
+          </table>
+        </div>
+        <div id="decrees-empty" class="empty-state" style="display:none;">Aucun décret dans cette catégorie.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="decree-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="decree-modal-title">Nouveau décret</h2>
+      <button class="modal-close" id="decree-modal-close">&times;</button>
+    </div>
+    <form id="decree-form">
+      <input type="hidden" id="decree-id">
+      <div class="field"><label>Titre</label><input type="text" id="decree-title" required></div>
+      <div class="field-row">
+        <div class="field"><label>Date d'entrée en vigueur</label><input type="date" id="decree-effective-date"></div>
+        <div class="field"><label>Niveau de confidentialité</label>
+          <select id="decree-confidentiality">
+            <option value="publique">Publique</option>
+            <option value="interne" selected>Interne</option>
+            <option value="confidentiel">Confidentiel</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Contenu complet</label><textarea id="decree-content"></textarea></div>
+      <div class="field"><label>Pièces jointes (une par ligne : nom ou lien)</label><textarea id="decree-attachments" style="min-height:60px;"></textarea></div>
+      <div class="field"><label>Notes internes</label><textarea id="decree-notes" style="min-height:60px;"></textarea></div>
+
+      <div id="decree-meta" class="muted" style="margin-bottom:0.6rem;"></div>
+
+      <div class="modal-actions no-print">
+        <div id="decree-status-actions" style="margin-right:auto; display:flex; gap:0.4rem; flex-wrap:wrap;"></div>
+        <button type="button" class="btn btn-outline" id="decree-print-btn">Version imprimable</button>
+        <button type="button" class="btn btn-outline" id="decree-modal-cancel">Annuler</button>
+        <button type="submit" class="btn btn-gold" id="decree-save-btn">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/pages/decrets.js"></script>
+</body>
+</html>

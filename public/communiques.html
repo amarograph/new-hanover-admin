@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Communiqués — Administration de New Hanover</title>
+<link rel="stylesheet" href="/css/theme.css">
+</head>
+<body data-page="communiques" data-require-permission="communiques:view">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <div class="content" id="content">
+      <div class="flex-between">
+        <h1>Communiqués de New Hanover</h1>
+        <button class="btn btn-gold no-print" id="btn-new">+ Ajouter un communiqué</button>
+      </div>
+
+      <div class="tabs no-print" id="category-tabs"></div>
+
+      <div class="sheet no-print" style="display:flex; gap:0.8rem; align-items:flex-end;">
+        <div class="field" style="margin:0; flex:1;">
+          <label>Rechercher par numéro ou titre</label>
+          <input type="search" id="filter-q" placeholder="COM-NH-1892-001 ou mot du titre...">
+        </div>
+      </div>
+
+      <div class="sheet">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Numéro</th><th>Titre</th><th>Public concerné</th><th>Auteur</th><th>Créé le</th><th>Statut</th></tr></thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+        <div id="table-empty" class="empty-state" style="display:none;">Aucun communiqué dans cette catégorie.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="item-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Nouveau communiqué</h2>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <form id="item-form">
+      <input type="hidden" id="item-id">
+      <div class="field"><label>Titre</label><input type="text" id="f-title" required></div>
+      <div class="field-row">
+        <div class="field"><label>Sujet</label><input type="text" id="f-subject"></div>
+        <div class="field"><label>Public concerné</label>
+          <select id="f-audience">
+            <option value="tous">Tous les citoyens</option>
+            <option value="entreprises">Entreprises</option>
+            <option value="forces_ordre">Forces de l'ordre</option>
+            <option value="corps_medical">Corps médical</option>
+            <option value="employes">Employés de l'administration</option>
+            <option value="personnalise">Groupe personnalisé</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Contenu</label><textarea id="f-content"></textarea></div>
+      <div class="field"><label>Pièces jointes (une par ligne)</label><textarea id="f-attachments" style="min-height:60px;"></textarea></div>
+      <div class="field"><label>Notes internes</label><textarea id="f-notes" style="min-height:60px;"></textarea></div>
+
+      <div id="item-meta" class="muted" style="margin-bottom:0.6rem;"></div>
+
+      <div class="modal-actions no-print">
+        <div id="status-actions" style="margin-right:auto; display:flex; gap:0.4rem; flex-wrap:wrap;"></div>
+        <button type="button" class="btn btn-outline" id="modal-cancel">Annuler</button>
+        <button type="submit" class="btn btn-gold" id="save-btn">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/pages/communiques.js"></script>
+</body>
+</html>

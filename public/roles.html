@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rôles et permissions — Administration de New Hanover</title>
+<link rel="stylesheet" href="/css/theme.css">
+<style>
+  .perm-table th, .perm-table td { text-align: center; }
+  .perm-table td:first-child, .perm-table th:first-child { text-align: left; }
+  .perm-table input[type="checkbox"] { width: auto; }
+</style>
+</head>
+<body data-page="roles" data-require-permission="admin:manage_users">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <div class="content" id="content">
+      <div class="flex-between">
+        <h1>Rôles et permissions</h1>
+        <button class="btn btn-gold" id="btn-new">+ Créer un rôle</button>
+      </div>
+
+      <div class="sheet">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Rôle</th><th>Description</th><th></th></tr></thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="role-modal">
+  <div class="modal" style="max-width:760px;">
+    <div class="modal-header">
+      <h2 id="modal-title">Nouveau rôle</h2>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <form id="role-form">
+      <input type="hidden" id="f-id">
+      <div class="field-row">
+        <div class="field"><label>Nom du rôle</label><input type="text" id="f-name" required></div>
+        <div class="field"><label>Description</label><input type="text" id="f-description"></div>
+      </div>
+      <div class="table-wrap">
+        <table class="perm-table" id="perm-matrix"></table>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-danger" id="btn-delete" style="margin-right:auto; display:none;">Supprimer le rôle</button>
+        <button type="button" class="btn btn-outline" id="modal-cancel">Annuler</button>
+        <button type="submit" class="btn btn-gold">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/pages/roles.js"></script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda administratif — Administration de New Hanover</title>
+<link rel="stylesheet" href="/css/theme.css">
+<style>
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-cell { min-height: 90px; background: rgba(243,232,207,0.55); border: 1px solid var(--paper-line); border-radius: var(--radius); padding: 0.3rem; font-size: 0.78rem; cursor: pointer; }
+  .cal-cell.other-month { opacity: 0.4; }
+  .cal-cell.today { border-color: var(--gold); border-width: 2px; }
+  .cal-cell .day-num { font-family: var(--font-display); font-weight: 600; }
+  .cal-event { background: var(--leather); color: #f3e8cf; border-radius: 2px; padding: 1px 4px; margin-top: 2px; font-size: 0.7rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .week-cols, .day-col { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .week-col-header { text-align: center; font-family: var(--font-display); font-size: 0.78rem; color: var(--ink-soft); padding-bottom: 0.3rem; border-bottom: 1px solid var(--paper-line); }
+</style>
+</head>
+<body data-page="agenda" data-require-permission="agenda:view">
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <div class="content" id="content">
+      <div class="flex-between">
+        <h1>Agenda administratif</h1>
+        <button class="btn btn-gold" id="btn-new">+ Ajouter un élément</button>
+      </div>
+
+      <div class="sheet">
+        <div class="flex-between" style="margin-bottom:1rem;">
+          <div class="tabs" style="margin:0;" id="view-tabs">
+            <div class="tab" data-view="jour">Jour</div>
+            <div class="tab" data-view="semaine">Semaine</div>
+            <div class="tab active" data-view="mois">Mois</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <button class="btn btn-outline btn-sm" id="btn-prev">‹</button>
+            <div id="period-label" style="font-family:var(--font-display); min-width:170px; text-align:center;"></div>
+            <button class="btn btn-outline btn-sm" id="btn-next">›</button>
+            <button class="btn btn-outline btn-sm" id="btn-today">Aujourd'hui</button>
+          </div>
+        </div>
+        <div id="calendar-container"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="event-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Nouvel élément d'agenda</h2>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <form id="event-form">
+      <input type="hidden" id="f-id">
+      <div class="field"><label>Titre</label><input type="text" id="f-title" required></div>
+      <div class="field-row">
+        <div class="field"><label>Type</label>
+          <select id="f-type">
+            <option value="rendez_vous">Rendez-vous</option>
+            <option value="reunion">Réunion</option>
+            <option value="audience">Audience</option>
+            <option value="entretien">Entretien</option>
+            <option value="evenement">Événement</option>
+            <option value="date_limite">Date limite</option>
+            <option value="publication_prevue">Publication prévue</option>
+            <option value="inspection">Inspection</option>
+            <option value="deplacement_officiel">Déplacement officiel</option>
+            <option value="rappel">Rappel</option>
+          </select>
+        </div>
+        <div class="field"><label>Priorité</label>
+          <select id="f-priority">
+            <option value="faible">Faible</option>
+            <option value="normale" selected>Normale</option>
+            <option value="importante">Importante</option>
+            <option value="urgente">Urgente</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Date</label><input type="date" id="f-date" required></div>
+        <div class="field"><label>Heure de début</label><input type="time" id="f-start"></div>
+        <div class="field"><label>Heure de fin</label><input type="time" id="f-end"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Lieu</label><input type="text" id="f-location"></div>
+        <div class="field"><label>Statut</label>
+          <select id="f-status">
+            <option value="prevu">Prévu</option>
+            <option value="confirme">Confirmé</option>
+            <option value="reporte">Reporté</option>
+            <option value="annule">Annulé</option>
+            <option value="termine">Terminé</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Participants (séparés par des virgules)</label><input type="text" id="f-participants"></div>
+      <div class="field"><label>Description</label><textarea id="f-description"></textarea></div>
+      <div class="field"><label><input type="checkbox" id="f-reminder" style="width:auto; display:inline-block;"> Activer un rappel</label></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-danger" id="btn-delete" style="margin-right:auto; display:none;">Supprimer</button>
+        <button type="button" class="btn btn-outline" id="modal-cancel">Annuler</button>
+        <button type="submit" class="btn btn-gold">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/pages/agenda.js"></script>
+</body>
+</html>

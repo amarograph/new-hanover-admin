@@ -46,6 +46,12 @@ export default async function handler(req, res) {
     ).bind(like, like).all();
     r.forEach((x) => results.push({ type: 'entreprise', label: `${x.number} — ${x.name}`, url: `/entreprises.html?id=${x.id}` }));
   }
+  if (hasPermission(user, 'employes', 'view')) {
+    const { results: r } = await db.prepare(
+      "SELECT id, number, first_name, last_name FROM employes WHERE first_name LIKE ? OR last_name LIKE ? OR number LIKE ? LIMIT 5"
+    ).bind(like, like, like).all();
+    r.forEach((x) => results.push({ type: 'employe', label: `${x.number} — ${x.first_name} ${x.last_name}`, url: `/employes.html?id=${x.id}` }));
+  }
   if (hasPermission(user, 'admin', 'manage_users')) {
     const { results: r } = await db.prepare(
       "SELECT id, discord_username, character_first_name, character_last_name FROM users WHERE discord_username LIKE ? OR character_first_name LIKE ? OR character_last_name LIKE ? LIMIT 5"

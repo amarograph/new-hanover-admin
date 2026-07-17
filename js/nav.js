@@ -8,7 +8,7 @@
       { href: '/agenda.html', label: 'Agenda', icon: '▤', page: 'agenda', perm: ['agenda', 'view'] },
       { href: '/entreprises.html', label: 'Entreprises', icon: '⚑', page: 'entreprises', perm: ['entreprises', 'view'] },
       { href: '/comptabilite.html', label: 'Comptabilité', icon: '⚖', page: 'comptabilite', perm: ['accounting', 'view'] },
-      { href: '/employes.html', label: 'Employés', icon: '☺', page: 'employes' },
+      { href: '/employes.html', label: 'Employés', icon: '☺', page: 'employes', perm: ['employes', 'view'] },
       { href: '/taches.html', label: 'Tâches', icon: '✓', page: 'taches' },
       { href: '/courriers.html', label: 'Courriers', icon: '✎', page: 'courriers' },
       { href: '/armes.html', label: 'Registre des armes', icon: '⚔', page: 'armes' },

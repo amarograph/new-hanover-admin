@@ -123,6 +123,20 @@ CREATE TABLE IF NOT EXISTS entreprises (
   updated_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
 );
 
+CREATE TABLE IF NOT EXISTS employes (
+  id SERIAL PRIMARY KEY,
+  number TEXT UNIQUE,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  birth_date TEXT,
+  residence TEXT,
+  account_number TEXT,
+  job_title TEXT,
+  author_id INTEGER REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'),
+  updated_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
+);
+
 CREATE TABLE IF NOT EXISTS transactions (
   id SERIAL PRIMARY KEY,
   number TEXT UNIQUE,

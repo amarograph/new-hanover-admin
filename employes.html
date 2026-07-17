@@ -7,27 +7,70 @@
 <link rel="icon" type="image/png" href="/css/img/favicon.png">
 <link rel="stylesheet" href="/css/theme.css">
 </head>
-<body data-page="employes">
+<body data-page="employes" data-require-permission="employes:view">
 <div class="app-shell">
   <aside class="sidebar" id="sidebar"></aside>
   <div class="main">
     <header class="topbar" id="topbar"></header>
     <div class="content" id="content">
-      <h1>Personnel administratif</h1>
+      <div class="flex-between">
+        <h1>Personnel administratif</h1>
+        <button class="btn btn-gold" id="btn-new">+ Ajouter un employé</button>
+      </div>
+
+      <div class="sheet" style="display:flex; gap:0.8rem; align-items:flex-end;">
+        <div class="field" style="margin:0; flex:1;">
+          <label>Rechercher par nom, numéro ou poste</label>
+          <input type="search" id="filter-q" placeholder="EMP-NH-001 ou mot-clé...">
+        </div>
+      </div>
+
       <div class="sheet">
-        <span class="stamp stamp-gold" style="margin-bottom:0.8rem;">Module à venir</span>
-        <p>Gestion du personnel de l'administration : fonctions, grades, départements et permissions.</p>
-        
-        <h3>Prévu pour ce module</h3>
-        <ul class="muted" style="line-height:1.9;">
-          <li>Fiche employé (fonction, grade, département, date d'arrivée, supérieur hiérarchique)</li><li>Statuts : en service, en congé, absent, suspendu, démissionnaire, renvoyé, archivé</li><li>Départements : gouvernance, secrétariat, finances, relations entreprises, événementiel, registres, communication, archives</li><li>Lien direct avec les permissions attribuées sur le site</li>
-        </ul>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Numéro</th><th>Nom</th><th>Prénom</th><th>Poste</th><th>Lieu de résidence</th></tr></thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+        <div id="table-empty" class="empty-state" style="display:none;">Aucun employé.</div>
       </div>
     </div>
   </div>
 </div>
+
+<div class="modal-backdrop" id="item-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Nouvel employé</h2>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <form id="item-form">
+      <input type="hidden" id="f-id">
+      <div class="field-row">
+        <div class="field"><label>Prénom</label><input type="text" id="f-first-name" required></div>
+        <div class="field"><label>Nom</label><input type="text" id="f-last-name" required></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Date de naissance</label><input type="date" id="f-birth-date"></div>
+        <div class="field"><label>Poste</label><input type="text" id="f-job-title"></div>
+      </div>
+      <div class="field"><label>Lieu de résidence</label><input type="text" id="f-residence"></div>
+      <div class="field"><label>Numéro de compte</label><input type="text" id="f-account-number"></div>
+
+      <div id="item-meta" class="muted" style="margin-bottom:0.6rem;"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-danger" id="btn-delete" style="margin-right:auto; display:none;">Supprimer</button>
+        <button type="button" class="btn btn-outline" id="modal-cancel">Annuler</button>
+        <button type="submit" class="btn btn-gold" id="save-btn">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script src="/js/api.js"></script>
 <script src="/js/utils.js"></script>
 <script src="/js/nav.js"></script>
+<script src="/js/pages/employes.js"></script>
 </body>
 </html>

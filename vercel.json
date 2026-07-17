@@ -6,6 +6,8 @@
     { "source": "/api/communiques/:id", "destination": "/api/communiques?slug=:id" },
     { "source": "/api/decrees/:id", "destination": "/api/decrees?slug=:id" },
     { "source": "/api/entreprises/:id", "destination": "/api/entreprises?slug=:id" },
+    { "source": "/api/employes", "destination": "/api/entreprises?resource=employes" },
+    { "source": "/api/employes/:id", "destination": "/api/entreprises?resource=employes&slug=:id" },
     { "source": "/api/roles/:id", "destination": "/api/roles?slug=:id" },
     { "source": "/api/users/:id", "destination": "/api/users?slug=:id" }
   ]

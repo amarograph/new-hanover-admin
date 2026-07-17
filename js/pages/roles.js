@@ -4,6 +4,7 @@ const MODULES = [
   { key: 'agenda', label: 'Agenda', actions: ['view', 'add', 'edit', 'archive', 'delete', 'download'] },
   { key: 'accounting', label: 'Comptabilité', actions: ['view', 'add', 'edit', 'delete', 'validate', 'download'] },
   { key: 'entreprises', label: 'Entreprises', actions: ['view', 'add', 'edit', 'archive', 'delete', 'download'] },
+  { key: 'employes', label: 'Employés', actions: ['view', 'add', 'edit', 'delete'] },
   { key: 'admin', label: 'Administration du site', actions: ['manage_users', 'view_log'] },
 ];
 const ACTION_LABELS = {

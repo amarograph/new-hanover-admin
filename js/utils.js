@@ -192,6 +192,27 @@ NH.CHEVAL_STATUS_STAMP_CLASS = {
   archive: 'stamp-grey',
 };
 
+NH.EVT_STATUS_LABELS = {
+  idee: 'Idée',
+  a_preparer: 'À préparer',
+  en_organisation: 'En organisation',
+  en_attente_validation: 'En attente de validation',
+  confirme: 'Confirmé',
+  termine: 'Terminé',
+  annule: 'Annulé',
+  archive: 'Archivé',
+};
+NH.EVT_STATUS_STAMP_CLASS = {
+  idee: 'stamp-neutral',
+  a_preparer: 'stamp-gold',
+  en_organisation: 'stamp-gold',
+  en_attente_validation: 'stamp-gold',
+  confirme: 'stamp-green',
+  termine: 'stamp-green',
+  annule: 'stamp-red',
+  archive: 'stamp-grey',
+};
+
 NH.INV_CATEGORY_LABELS = {
   documents: 'Documents',
   materiel_administratif: 'Matériel administratif',

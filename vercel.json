@@ -20,6 +20,8 @@
     { "source": "/api/chevaux/:id", "destination": "/api/entreprises?resource=chevaux&slug=:id" },
     { "source": "/api/inventaire", "destination": "/api/entreprises?resource=inventaire" },
     { "source": "/api/inventaire/:id", "destination": "/api/entreprises?resource=inventaire&slug=:id" },
+    { "source": "/api/evenements", "destination": "/api/entreprises?resource=evenements" },
+    { "source": "/api/evenements/:id", "destination": "/api/entreprises?resource=evenements&slug=:id" },
     { "source": "/api/roles/:id", "destination": "/api/roles?slug=:id" },
     { "source": "/api/users/:id", "destination": "/api/users?slug=:id" }
   ]

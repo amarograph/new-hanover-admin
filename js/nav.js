@@ -15,7 +15,7 @@
       { href: '/armes.html', label: 'Registre des armes', icon: '⚔', page: 'armes', perm: ['armes', 'view'] },
       { href: '/chevaux.html', label: 'Registre des chevaux', icon: '♞', page: 'chevaux', perm: ['chevaux', 'view'] },
       { href: '/inventaire.html', label: 'Inventaire du coffre', icon: '⚿', page: 'inventaire', perm: ['inventaire', 'view'] },
-      { href: '/evenements.html', label: 'Événements', icon: '✦', page: 'evenements' },
+      { href: '/evenements.html', label: 'Événements', icon: '✦', page: 'evenements', perm: ['evenements', 'view'] },
       { href: '/archives.html', label: 'Archives', icon: '⌘', page: 'archives' },
     ]},
     { group: 'Administration du site', items: [

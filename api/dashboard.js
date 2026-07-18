@@ -55,6 +55,12 @@ async function archivesView(req, res, user) {
     ).all();
     r.forEach((x) => results.push({ type: 'Événement terminé', label: x.title, date: x.date, url: `/agenda.html?id=${x.id}` }));
   }
+  if (hasPermission(user, 'evenements', 'view')) {
+    const { results: r } = await db.prepare(
+      "SELECT id, number, title, updated_at FROM evenements WHERE status IN ('termine','annule','archive') ORDER BY updated_at DESC LIMIT 50"
+    ).all();
+    r.forEach((x) => results.push({ type: 'Événement clos', label: `${x.number || ''} — ${x.title}`, date: x.updated_at, url: `/evenements.html?id=${x.id}` }));
+  }
   if (hasPermission(user, 'taches', 'view')) {
     const { results: r } = await db.prepare(
       "SELECT id, text, updated_at FROM taches WHERE done = 1 ORDER BY updated_at DESC LIMIT 50"

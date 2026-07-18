@@ -571,7 +571,126 @@ export default async function handler(req, res) {
   if (req.query.resource === 'armes') return handleArmes(req, res, user, slug);
   if (req.query.resource === 'chevaux') return handleChevaux(req, res, user, slug);
   if (req.query.resource === 'inventaire') return handleInventaire(req, res, user, slug);
+  if (req.query.resource === 'evenements') return handleEvenements(req, res, user, slug);
   return handleEntreprises(req, res, user, slug);
+}
+
+// ---------------------------------------------------------------------------
+// Organisation des événements (?resource=evenements).
+// ---------------------------------------------------------------------------
+
+const EVT_SELECT = `SELECT e.*, au.discord_username as author_name
+  FROM evenements e
+  LEFT JOIN users au ON au.id = e.author_id`;
+
+const EVT_STATUSES = ['idee', 'a_preparer', 'en_organisation', 'en_attente_validation', 'confirme', 'termine', 'annule', 'archive'];
+
+async function getEvenement(id) {
+  return db.prepare(EVT_SELECT + ' WHERE e.id = ?').bind(id).first();
+}
+
+async function listEvenements(req, res, user) {
+  if (!hasPermission(user, 'evenements', 'view')) return sendError(res, 'Accès refusé', 403);
+
+  const { status, q } = req.query;
+  let query = EVT_SELECT + ' WHERE 1=1';
+  const binds = [];
+  if (status) { query += ' AND e.status = ?'; binds.push(status); }
+  if (q) { query += ' AND (e.title LIKE ? OR e.number LIKE ?)'; binds.push(`%${q}%`, `%${q}%`); }
+  query += ' ORDER BY e.date ASC NULLS LAST, e.created_at DESC';
+
+  const { results } = await db.prepare(query).bind(...binds).all();
+  return sendJson(res, { evenements: results });
+}
+
+function readEvenementBody(body) {
+  return {
+    title: body.title,
+    description: body.description || '',
+    date: body.date || null,
+    budget_prevu: body.budget_prevu !== undefined && body.budget_prevu !== '' ? Number(body.budget_prevu) : 0,
+    depenses_reelles: body.depenses_reelles !== undefined && body.depenses_reelles !== '' ? Number(body.depenses_reelles) : 0,
+    notes: body.notes || '',
+  };
+}
+
+async function createEvenement(req, res, user) {
+  if (!hasPermission(user, 'evenements', 'add')) return sendError(res, 'Accès refusé', 403);
+
+  const body = req.body || {};
+  if (!body.title) return sendError(res, 'Le titre est requis', 422);
+  const f = readEvenementBody(body);
+
+  const number = await nextNumber(db, 'EVT-NH', '1892');
+  const result = await db.prepare(
+    `INSERT INTO evenements (number, title, description, date, budget_prevu, depenses_reelles, notes, author_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+  ).bind(number, f.title, f.description, f.date, f.budget_prevu, f.depenses_reelles, f.notes, user.id).run();
+
+  const id = result.meta.last_row_id;
+  await logActivity(db, user.id, 'Création de l\'événement', 'evenement', id, null, { number, title: f.title });
+  return sendJson(res, { id, number }, 201);
+}
+
+async function handleEvenements(req, res, user, slug) {
+  if (slug.length === 0) {
+    if (req.method === 'GET') return listEvenements(req, res, user);
+    if (req.method === 'POST') return createEvenement(req, res, user);
+    res.setHeader('Allow', 'GET, POST');
+    return sendError(res, 'Méthode non autorisée', 405);
+  }
+
+  const id = slug[0];
+
+  if (req.method === 'GET') {
+    if (!hasPermission(user, 'evenements', 'view')) return sendError(res, 'Accès refusé', 403);
+    const evenement = await getEvenement(id);
+    if (!evenement) return sendError(res, 'Événement introuvable', 404);
+    return sendJson(res, { evenement });
+  }
+
+  if (req.method === 'PUT') {
+    if (!hasPermission(user, 'evenements', 'edit')) return sendError(res, 'Accès refusé', 403);
+    const before = await getEvenement(id);
+    if (!before) return sendError(res, 'Événement introuvable', 404);
+
+    const body = req.body || {};
+    if (!body.title) return sendError(res, 'Le titre est requis', 422);
+    const f = readEvenementBody(body);
+
+    await db.prepare(
+      `UPDATE evenements SET title=?, description=?, date=?, budget_prevu=?, depenses_reelles=?, notes=?, updated_at=${NOW_EXPR} WHERE id=?`
+    ).bind(f.title, f.description, f.date, f.budget_prevu, f.depenses_reelles, f.notes, id).run();
+
+    await logActivity(db, user.id, 'Modification de l\'événement', 'evenement', id, before, body);
+    return sendJson(res, { ok: true });
+  }
+
+  if (req.method === 'PATCH') {
+    if (!hasPermission(user, 'evenements', 'edit')) return sendError(res, 'Accès refusé', 403);
+    const before = await getEvenement(id);
+    if (!before) return sendError(res, 'Événement introuvable', 404);
+
+    const body = req.body || {};
+    if (!body.status || !EVT_STATUSES.includes(body.status)) return sendError(res, 'Statut invalide', 422);
+
+    await db.prepare(`UPDATE evenements SET status=?, updated_at=${NOW_EXPR} WHERE id=?`).bind(body.status, id).run();
+    await logActivity(db, user.id, `Changement de statut de l'événement (${before.status} -> ${body.status})`, 'evenement', id, { status: before.status }, { status: body.status });
+    return sendJson(res, { ok: true });
+  }
+
+  if (req.method === 'DELETE') {
+    if (!hasPermission(user, 'evenements', 'delete')) return sendError(res, 'Accès refusé', 403);
+    const before = await getEvenement(id);
+    if (!before) return sendError(res, 'Événement introuvable', 404);
+
+    await db.prepare('DELETE FROM evenements WHERE id=?').bind(id).run();
+    await logActivity(db, user.id, 'Suppression de l\'événement', 'evenement', id, before, null);
+    return sendJson(res, { ok: true });
+  }
+
+  res.setHeader('Allow', 'GET, POST, PUT, PATCH, DELETE');
+  return sendError(res, 'Méthode non autorisée', 405);
 }
 
 // ---------------------------------------------------------------------------

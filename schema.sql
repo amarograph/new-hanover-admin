@@ -223,6 +223,22 @@ CREATE TABLE IF NOT EXISTS inventaire (
 );
 CREATE INDEX IF NOT EXISTS idx_inventaire_category ON inventaire(category);
 
+CREATE TABLE IF NOT EXISTS evenements (
+  id SERIAL PRIMARY KEY,
+  number TEXT UNIQUE,
+  title TEXT NOT NULL,
+  description TEXT,
+  date TEXT,
+  status TEXT NOT NULL DEFAULT 'idee',
+  budget_prevu REAL NOT NULL DEFAULT 0,
+  depenses_reelles REAL NOT NULL DEFAULT 0,
+  notes TEXT,
+  author_id INTEGER REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'),
+  updated_at TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
+);
+CREATE INDEX IF NOT EXISTS idx_evenements_status ON evenements(status);
+
 CREATE TABLE IF NOT EXISTS transactions (
   id SERIAL PRIMARY KEY,
   number TEXT UNIQUE,

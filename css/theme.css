@@ -107,7 +107,7 @@ a { color: var(--bordeaux); }
   text-decoration: none;
 }
 .sidebar .brand small { display: block; font-family: var(--font-body); font-style: italic; color: #cbb98a; font-size: 0.72rem; letter-spacing: 0.05em; margin-top: 0.25rem; }
-.brand-crest { display: block; width: 192px; height: 192px; margin: 0 auto 0.5rem; }
+.brand-crest { display: block; width: clamp(90px, 15vh, 176px); height: auto; aspect-ratio: 1 / 1; max-width: 100%; margin: 0 auto 0.5rem; }
 
 .nav-group { margin-bottom: 0.6rem; }
 .nav-group-title {
@@ -365,7 +365,7 @@ tbody tr:hover { background: rgba(184,134,44,0.08); }
   text-align: center;
   box-shadow: 0 20px 60px rgba(0,0,0,0.55);
 }
-.gate-crest { width: 360px; height: 360px; max-width: 100%; margin-bottom: 0.8rem; }
+.gate-crest { width: clamp(90px, 18vh, 200px); height: auto; aspect-ratio: 1 / 1; max-width: 100%; margin-bottom: 0.8rem; }
 .gate-card h1 { font-size: 1.4rem; margin-bottom: 0.3rem; }
 .gate-card .subtitle { font-style: italic; color: var(--ink-soft); margin-bottom: 1.6rem; }
 .discord-btn {

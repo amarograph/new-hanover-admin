@@ -159,6 +159,7 @@
     renderSidebar(data.user, currentPage);
     renderTopbar(data.user);
     renderMailboxBanner();
+    renderAgendaReminderBanner();
 
     window.NH.currentUser = data.user;
     document.dispatchEvent(new CustomEvent('nh:ready', { detail: data.user }));
@@ -173,6 +174,20 @@
     banner.className = 'mailbox-banner no-print';
     const n = data.boite_lettres.length;
     banner.innerHTML = `✉ Vous êtes cité(e) dans ${n} courrier${n > 1 ? 's' : ''} de la boîte aux lettres à traiter. <a href="/boite-lettres.html">Voir</a>`;
+    document.body.prepend(banner);
+  }
+
+  async function renderAgendaReminderBanner() {
+    let data;
+    try { data = await NH.get('/api/agenda?my_upcoming_reminder=1'); } catch (e) { return; }
+    if (!data.events || !data.events.length) return;
+
+    const banner = document.createElement('div');
+    banner.className = 'mailbox-banner no-print';
+    banner.innerHTML = data.events.map((e) => {
+      const time = e.start_time ? e.start_time.slice(0, 5) : '';
+      return `⏰ Rappel : rendez-vous « ${NH.escapeHtml(e.title)} » à ${time}${e.location ? ' — ' + NH.escapeHtml(e.location) : ''}`;
+    }).join(' &nbsp;·&nbsp; ') + ` <a href="/agenda.html">Voir l'agenda</a>`;
     document.body.prepend(banner);
   }
 

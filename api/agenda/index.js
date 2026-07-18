@@ -11,7 +11,22 @@ async function getEvent(id) {
   return db.prepare(SELECT + ' WHERE e.id = ?').bind(id).first();
 }
 
+// Utilisé par la bannière de rappel globale (nav.js) : tout organisateur
+// connecté peut voir ses propres rendez-vous de l'heure à venir, même sans
+// la permission "view" sur tout le module agenda.
+async function myUpcomingReminders(req, res, user) {
+  if (!user) return sendError(res, 'Non authentifié', 401);
+  const { results } = await db.prepare(
+    `SELECT id, title, date, start_time, location FROM agenda_events
+     WHERE organizer_id = ? AND status != 'annule' AND start_time IS NOT NULL
+       AND (date || ' ' || start_time)::timestamp BETWEEN (NOW() AT TIME ZONE 'UTC') AND (NOW() AT TIME ZONE 'UTC' + interval '1 hour')
+     ORDER BY date ASC, start_time ASC`
+  ).bind(user.id).all();
+  return sendJson(res, { events: results });
+}
+
 async function list(req, res, user) {
+  if (req.query.my_upcoming_reminder === '1') return myUpcomingReminders(req, res, user);
   if (!hasPermission(user, 'agenda', 'view')) return sendError(res, 'Accès refusé', 403);
 
   const { from, to, q } = req.query;

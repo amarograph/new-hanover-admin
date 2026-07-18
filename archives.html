@@ -14,14 +14,18 @@
     <header class="topbar" id="topbar"></header>
     <div class="content" id="content">
       <h1>Archives générales</h1>
+      <p class="muted">Regroupe ce qui est déjà archivé, fermé, annulé ou terminé dans les autres modules — rien n'est jamais supprimé définitivement.</p>
+
+      <div class="tabs" id="type-tabs"></div>
+
       <div class="sheet">
-        <span class="stamp stamp-gold" style="margin-bottom:0.8rem;">Module à venir</span>
-        <p>Regroupement de tous les éléments archivés de l'administration, jamais supprimés définitivement.</p>
-        
-        <h3>Prévu pour ce module</h3>
-        <ul class="muted" style="line-height:1.9;">
-          <li>Décrets, communiqués et courriers archivés</li><li>Entreprises fermées et anciens employés</li><li>Transactions annulées, armes et chevaux archivés</li><li>Événements terminés et anciennes tâches</li>
-        </ul>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Type</th><th>Élément</th><th>Date</th></tr></thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+        <div id="table-empty" class="empty-state" style="display:none;">Aucune archive à afficher.</div>
       </div>
     </div>
   </div>
@@ -29,5 +33,6 @@
 <script src="/js/api.js"></script>
 <script src="/js/utils.js"></script>
 <script src="/js/nav.js"></script>
+<script src="/js/pages/archives.js"></script>
 </body>
 </html>

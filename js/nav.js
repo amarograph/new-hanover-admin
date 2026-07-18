@@ -74,10 +74,10 @@
         <div class="search-results" id="search-results"></div>
       </div>
       <div class="topbar-spacer"></div>
-      ${hasPermission(user, 'admin', 'manage_users') ? `<a href="/utilisateurs.html" class="btn btn-outline btn-sm no-print" style="text-decoration:none; margin-right:0.6rem;">⚙ Panel Admin</a>` : ''}
+      ${hasPermission(user, 'admin', 'manage_users') ? `<a href="/utilisateurs.html" class="btn btn-sm panel-admin-btn no-print">⚙ Panel Admin</a>` : ''}
       <div class="user-chip">
         <span class="name">${NH.escapeHtml(displayName)}</span>
-        <span class="muted">${NH.escapeHtml(user.role ? user.role.name : 'Sans rôle')}</span>
+        <span class="role">${NH.escapeHtml(user.role ? user.role.name : 'Sans rôle')}</span>
       </div>
       <button class="theme-toggle" id="theme-toggle" title="Basculer le mode d'affichage">☾ / ☀</button>
       <button class="logout-btn" id="logout-btn">Déconnexion</button>

@@ -68,9 +68,11 @@ h1, h2, h3, h4, .brand, .btn, nav a, .stamp, th {
 }
 
 h1, h2, h3, h4 { color: var(--ink); font-weight: 600; margin: 0 0 0.6em; }
-/* Les titres de page (h1) sont posés directement sur le fond bleu marine
-   du contenu, pas sur le papier crème : il leur faut une couleur claire. */
+/* Les titres de page (h1) et les paragraphes d'intro posés directement sur
+   le fond bleu marine du contenu (pas sur une feuille/un modal en papier
+   crème) ont besoin d'une couleur claire pour rester lisibles. */
 .content h1 { color: #e9dcc0; }
+.content > p.muted { color: #cbb98a; }
 h1 { font-size: 1.7rem; }
 h2 { font-size: 1.3rem; }
 h3 { font-size: 1.08rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
@@ -199,6 +201,14 @@ a { color: var(--bordeaux); }
   font-size: 0.85rem;
 }
 .user-chip .name { color: var(--gold-bright); font-weight: 600; }
+.user-chip .role { color: #cbb98a; }
+.panel-admin-btn {
+  background: transparent;
+  color: #e9dcc0;
+  border: 1px solid rgba(184,134,44,0.6);
+  text-decoration: none;
+}
+.panel-admin-btn:hover { background: rgba(184,134,44,0.15); }
 .theme-toggle, .logout-btn {
   background: transparent;
   border: 1px solid rgba(184,134,44,0.5);
@@ -312,7 +322,7 @@ tbody tr:hover { background: rgba(184,134,44,0.08); }
   padding: 0.4rem 0.9rem;
   border: 1px solid var(--paper-line);
   border-radius: 999px;
-  background: rgba(243,232,207,0.5);
+  background: var(--paper);
   color: var(--ink-soft);
   font-size: 0.8rem;
   cursor: pointer;

@@ -14,6 +14,11 @@ Nom : {{NOM_SIGNATAIRE}}
 Fonction : {{FONCTION_SIGNATAIRE}}`;
 
 const COURRIER_TEMPLATES = {
+  vierge: {
+    subject: '',
+    content: `\n\n\n${SIGNATURE_BLOCK}`,
+  },
+
   convocation: {
     subject: 'Convocation officielle auprès de l\'Administration du Comté',
     content: `ADMINISTRATION DU COMTÉ DE NEW HANOVER

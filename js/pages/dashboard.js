@@ -50,7 +50,7 @@ document.addEventListener('nh:ready', async (evt) => {
   const upcoming = document.getElementById('upcoming-events');
   if (data.upcoming_events && data.upcoming_events.length) {
     upcoming.innerHTML = '<table><tbody>' + data.upcoming_events.map((e) => `
-      <tr><td>${NH.formatDate(e.date)}</td><td>${NH.escapeHtml(e.title)}</td><td class="muted">${NH.AGENDA_TYPE_LABELS[e.type] || e.type}</td></tr>
+      <tr><td>${NH.formatDate(e.date)}</td><td class="muted">${e.start_time ? e.start_time.slice(0, 5) : '—'}${e.end_time ? ' - ' + e.end_time.slice(0, 5) : ''}</td><td>${NH.escapeHtml(e.title)}</td><td class="muted">${NH.AGENDA_TYPE_LABELS[e.type] || e.type}</td></tr>
     `).join('') + '</tbody></table>';
   } else if (data.upcoming_events) {
     upcoming.innerHTML = '<p class="empty-state">Aucun événement à venir.</p>';

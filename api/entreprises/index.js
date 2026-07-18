@@ -454,7 +454,10 @@ async function listBoiteLettres(req, res, user) {
   if (req.query.assignable_users === '1') {
     if (!hasPermission(user, 'boite_lettres', 'edit')) return sendError(res, 'Accès refusé', 403);
     const { results } = await db.prepare(
-      "SELECT id, character_first_name, character_last_name, discord_username FROM users WHERE status='accepted' ORDER BY character_last_name ASC, character_first_name ASC"
+      `SELECT u.id, u.character_first_name, u.character_last_name, u.discord_username FROM users u
+       LEFT JOIN roles r ON r.id = u.role_id
+       WHERE u.status='accepted' AND (r.name IS NULL OR r.name != 'Admin dev')
+       ORDER BY u.character_last_name ASC, u.character_first_name ASC`
     ).all();
     return sendJson(res, { users: results });
   }

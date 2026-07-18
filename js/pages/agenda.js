@@ -1,6 +1,7 @@
 const agendaState = { view: 'mois', refDate: new Date() };
 let currentUser = null;
 let eventsCache = [];
+let assignableUsersCache = [];
 
 function userLabel(u) {
   return (u.character_first_name || u.character_last_name) ? `${u.character_first_name || ''} ${u.character_last_name || ''}`.trim() : u.discord_username;
@@ -9,8 +10,19 @@ function userLabel(u) {
 async function loadAssignableUsers() {
   try {
     const data = await NH.get('/api/agenda?assignable_users=1');
-    document.getElementById('f-participants').innerHTML = data.users.map((u) => `<option value="${u.id}">${NH.escapeHtml(userLabel(u))}</option>`).join('');
+    assignableUsersCache = data.users;
   } catch (e) { /* pas grave si l'utilisateur ne peut pas assigner */ }
+}
+
+function addParticipantRow(selectedId) {
+  const row = document.createElement('div');
+  row.className = 'participant-row';
+  row.style.cssText = 'display:flex; gap:0.4rem; margin-bottom:0.4rem;';
+  const options = '<option value="">— Choisir une personne —</option>' + assignableUsersCache.map((u) => `<option value="${u.id}">${NH.escapeHtml(userLabel(u))}</option>`).join('');
+  row.innerHTML = `<select class="participant-select" style="flex:1;">${options}</select><button type="button" class="btn btn-outline btn-sm participant-remove">&times;</button>`;
+  if (selectedId) row.querySelector('select').value = String(selectedId);
+  row.querySelector('.participant-remove').addEventListener('click', () => row.remove());
+  document.getElementById('participants-rows').appendChild(row);
 }
 
 function pad2(n) { return String(n).padStart(2, '0'); }
@@ -169,10 +181,9 @@ function fillForm(evt) {
   document.getElementById('f-end').value = evt.end_time || '';
   document.getElementById('f-location').value = evt.location || '';
   document.getElementById('f-status').value = evt.status || 'prevu';
-  const participants = (evt.participants ? JSON.parse(evt.participants) : []).map(String);
-  Array.from(document.getElementById('f-participants').options).forEach((opt) => {
-    opt.selected = participants.includes(opt.value);
-  });
+  const participants = evt.participants ? JSON.parse(evt.participants) : [];
+  document.getElementById('participants-rows').innerHTML = '';
+  participants.forEach((id) => addParticipantRow(id));
   document.getElementById('f-description').value = evt.description || '';
   document.getElementById('f-reminder').checked = !!evt.reminder;
   document.getElementById('btn-delete').style.display = evt.id ? '' : 'none';
@@ -218,6 +229,7 @@ document.addEventListener('nh:ready', (evt) => {
   });
   document.getElementById('modal-close').addEventListener('click', () => NH.closeModal('event-modal'));
   document.getElementById('modal-cancel').addEventListener('click', () => NH.closeModal('event-modal'));
+  document.getElementById('btn-add-participant').addEventListener('click', () => addParticipantRow());
 
   document.getElementById('event-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -231,7 +243,12 @@ document.addEventListener('nh:ready', (evt) => {
       end_time: document.getElementById('f-end').value || null,
       location: document.getElementById('f-location').value,
       status: document.getElementById('f-status').value,
-      participants: Array.from(document.getElementById('f-participants').selectedOptions).map((opt) => Number(opt.value)),
+      participants: [...new Set(
+        Array.from(document.querySelectorAll('.participant-select'))
+          .map((sel) => sel.value)
+          .filter(Boolean)
+          .map(Number)
+      )],
       description: document.getElementById('f-description').value,
       reminder: document.getElementById('f-reminder').checked,
     };

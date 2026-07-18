@@ -9,7 +9,8 @@ document.addEventListener('nh:ready', async () => {
       NH.get('/api/users'),
       NH.get('/api/settings'),
     ]);
-    const options = '<option value="">—</option>' + usersData.users.map((u) => `<option value="${u.id}">${NH.escapeHtml(userLabel(u))}</option>`).join('');
+    const signableUsers = usersData.users.filter((u) => u.role_name !== 'Admin dev');
+    const options = '<option value="">—</option>' + signableUsers.map((u) => `<option value="${u.id}">${NH.escapeHtml(userLabel(u))}</option>`).join('');
     document.getElementById('f-signer-1').innerHTML = options;
     document.getElementById('f-signer-2').innerHTML = options;
     document.getElementById('f-signer-1').value = settingsData.signer_1 ? settingsData.signer_1.id : '';

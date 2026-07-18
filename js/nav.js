@@ -41,7 +41,7 @@
   function renderSidebar(user, currentPage) {
     const sidebar = document.getElementById('sidebar');
     if (!sidebar) return;
-    let html = `<a class="brand" href="/dashboard.html"><img src="/css/img/crest-120.png" alt="" class="brand-crest">Administration<br>de New Hanover<small>Territoire du New Hanover — 1892</small></a>`;
+    let html = `<a class="brand" href="/dashboard.html"><img src="/css/img/crest-500.png" alt="" class="brand-crest">Administration<br>de New Hanover<small>Territoire du New Hanover — 1892</small></a>`;
     NAV_SECTIONS.forEach((section) => {
       const visibleItems = section.items.filter((it) => !it.perm || hasPermission(user, it.perm[0], it.perm[1]));
       if (!visibleItems.length) return;

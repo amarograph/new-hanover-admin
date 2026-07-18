@@ -18,15 +18,29 @@ async function myUpcomingReminders(req, res, user) {
   if (!user) return sendError(res, 'Non authentifié', 401);
   const { results } = await db.prepare(
     `SELECT id, title, date, start_time, location FROM agenda_events
-     WHERE organizer_id = ? AND status != 'annule' AND start_time IS NOT NULL
+     WHERE status != 'annule' AND start_time IS NOT NULL
        AND (date || ' ' || start_time)::timestamp BETWEEN (NOW() AT TIME ZONE 'UTC') AND (NOW() AT TIME ZONE 'UTC' + interval '1 hour')
+       AND (
+         organizer_id = ?
+         OR EXISTS (SELECT 1 FROM jsonb_array_elements_text(participants::jsonb) p WHERE p::int = ?)
+       )
      ORDER BY date ASC, start_time ASC`
-  ).bind(user.id).all();
+  ).bind(user.id, user.id).all();
   return sendJson(res, { events: results });
 }
 
 async function list(req, res, user) {
   if (req.query.my_upcoming_reminder === '1') return myUpcomingReminders(req, res, user);
+
+  // Liste des personnes assignables, pour le menu déroulant "Participants".
+  if (req.query.assignable_users === '1') {
+    if (!hasPermission(user, 'agenda', 'add') && !hasPermission(user, 'agenda', 'edit')) return sendError(res, 'Accès refusé', 403);
+    const { results } = await db.prepare(
+      "SELECT id, character_first_name, character_last_name, discord_username FROM users WHERE status='accepted' ORDER BY character_last_name ASC, character_first_name ASC"
+    ).all();
+    return sendJson(res, { users: results });
+  }
+
   if (!hasPermission(user, 'agenda', 'view')) return sendError(res, 'Accès refusé', 403);
 
   const { from, to, q } = req.query;

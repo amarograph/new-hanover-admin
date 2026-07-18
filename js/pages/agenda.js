@@ -2,6 +2,17 @@ const agendaState = { view: 'mois', refDate: new Date() };
 let currentUser = null;
 let eventsCache = [];
 
+function userLabel(u) {
+  return (u.character_first_name || u.character_last_name) ? `${u.character_first_name || ''} ${u.character_last_name || ''}`.trim() : u.discord_username;
+}
+
+async function loadAssignableUsers() {
+  try {
+    const data = await NH.get('/api/agenda?assignable_users=1');
+    document.getElementById('f-participants').innerHTML = data.users.map((u) => `<option value="${u.id}">${NH.escapeHtml(userLabel(u))}</option>`).join('');
+  } catch (e) { /* pas grave si l'utilisateur ne peut pas assigner */ }
+}
+
 function pad2(n) { return String(n).padStart(2, '0'); }
 function toISODate(d) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
 function startOfWeek(d) {
@@ -158,8 +169,10 @@ function fillForm(evt) {
   document.getElementById('f-end').value = evt.end_time || '';
   document.getElementById('f-location').value = evt.location || '';
   document.getElementById('f-status').value = evt.status || 'prevu';
-  const participants = evt.participants ? JSON.parse(evt.participants) : [];
-  document.getElementById('f-participants').value = participants.join(', ');
+  const participants = (evt.participants ? JSON.parse(evt.participants) : []).map(String);
+  Array.from(document.getElementById('f-participants').options).forEach((opt) => {
+    opt.selected = participants.includes(opt.value);
+  });
   document.getElementById('f-description').value = evt.description || '';
   document.getElementById('f-reminder').checked = !!evt.reminder;
   document.getElementById('btn-delete').style.display = evt.id ? '' : 'none';
@@ -180,6 +193,7 @@ document.addEventListener('nh:ready', (evt) => {
   currentUser = evt.detail;
   syncViewTabs();
   renderCalendar();
+  if (NH.hasPermission(currentUser, 'agenda', 'add') || NH.hasPermission(currentUser, 'agenda', 'edit')) loadAssignableUsers();
 
   document.querySelectorAll('#view-tabs .tab').forEach((tab) => {
     tab.addEventListener('click', () => { agendaState.view = tab.dataset.view; syncViewTabs(); renderCalendar(); });
@@ -217,7 +231,7 @@ document.addEventListener('nh:ready', (evt) => {
       end_time: document.getElementById('f-end').value || null,
       location: document.getElementById('f-location').value,
       status: document.getElementById('f-status').value,
-      participants: document.getElementById('f-participants').value.split(',').map((s) => s.trim()).filter(Boolean),
+      participants: Array.from(document.getElementById('f-participants').selectedOptions).map((opt) => Number(opt.value)),
       description: document.getElementById('f-description').value,
       reminder: document.getElementById('f-reminder').checked,
     };
